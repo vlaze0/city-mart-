@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Mart - Your Local Ecommerce Store</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="navbar-left">
+                <h1>City Mart</h1>
+            </div>
+            <div class="navbar-right">
+                <nav>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                    <li><a href="#" onclick="showVendorsModal()">Product</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#" class="login-btn">Login</a></li>
+                    </ul>
+                </nav>
+                <div class="cart-icon" onclick="showCartModal()">
+                    🛒
+                    <span id="cart-count">0</span>
+                </div>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="mobile-menu">
+                <a href="#home">Home</a>
+                <a href="#products">Product</a>
+                <a href="#contact">Contact</a>
+                <a href="#" class="login-btn">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="home" class="hero">
+        <img src="./images/ahmad-attari-6FqXTCoYN8g-unsplash.jpg" alt="City Mart Hero Image" class="hero-image">
+        <div class="container">
+            <p class="moving-quote">"From cart to doorstep—fast, friendly, flawless."</p>
+            <a href="#" class="btn" onclick="showVendorsModal()">Enter Mart</a>
+        </div>
+    </section>
+
+    <section id="featured" class="featured">
+        <div class="container">
+            <div class="featured-content">
+                <div class="featured-text">
+                    <h2>Welcome to City Mart</h2>
+                    <p>Discover a world of quality products and services tailored for your lifestyle. From fresh groceries to the latest electronics, we bring everything you need right to your doorstep.</p>
+                    <a href="#" class="btn" onclick="showVendorsModal()">Explore Products</a>
+                </div>
+                <div class="featured-image">
+                    <img src="./images/featured-image.jpg" alt="Featured Products" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pets" class="category">
+        <div class="container">
+            <h2>Pets</h2>
+            <p class="tagline">"Love your pets like family."</p>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="./images/pet-food.jpg" alt="Pet Food">
+                    <div class="product-info">
+                        <h3>Premium Dog Food</h3>
+                        <p>Nutritious and delicious food for your furry friend.</p>
+                        <p class="price">₹29.99</p>
+                        <p class="discount">Up to 15% Off</p>
+                        <p class="features">High protein, Grain-free, Vet recommended</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="./images/pet-accessories.jpg" alt="Pet Accessories">
+                    <div class="product-info">
+                        <h3>Pet Accessories</h3>
+                        <p>Collars, leashes, and toys for happy pets.</p>
+                        <p class="price">₹15.99</p>
+                        <p class="discount">Up to 20% Off</p>
+                        <p class="features">Durable, Adjustable, Fun designs</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="food" class="category">
+        <div class="container">
+            <h2>Food & Groceries</h2>
+            <p class="tagline">"Fresh from your local market."</p>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="./images/fresh-vegetables.jpg" alt="Fresh Vegetables">
+                    <div class="product-info">
+                        <h3>Fresh Vegetables</h3>
+                        <p>Organic and locally sourced produce.</p>
+                        <p class="price">₹12.99</p>
+                        <p class="discount">Up to 25% Off</p>
+                        <p class="features">Farm fresh, Pesticide-free, Seasonal</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="./images/bakery.jpg" alt="Bakery Items">
+                    <div class="product-info">
+                        <h3>Bakery Items</h3>
+                        <p>Fresh bread and pastries daily.</p>
+                        <p class="price">₹8.99</p>
+                        <p class="discount">Up to 30% Off</p>
+                        <p class="features">Baked fresh, No preservatives, Variety of flavors</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="electronics" class="category">
+        <div class="container">
+            <h2>Electronics</h2>
+            <p class="tagline">"Upgrade your tech today."</p>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="./images/smartphone.jpg" alt="Smartphone">
+                    <div class="product-info">
+                        <h3>Latest Smartphone</h3>
+                        <p>Cutting-edge technology at affordable prices.</p>
+                        <p class="price">₹499.99</p>
+                        <p class="discount">Up to 20% Off</p>
+                        <p class="features">High-resolution camera, Fast charging, Long battery life</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="./images/headphones.jpg" alt="Headphones">
+                    <div class="product-info">
+                        <h3>Wireless Headphones</h3>
+                        <p>Immersive sound experience.</p>
+                        <p class="price">₹99.99</p>
+                        <p class="discount">Up to 15% Off</p>
+                        <p class="features">Noise cancelling, Bluetooth 5.0, Comfortable fit</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="household" class="category">
+        <div class="container">
+            <h2>Household</h2>
+            <p class="tagline">"Essentials for your home."</p>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="./images/cleaning-supplies.jpg" alt="Cleaning Supplies">
+                    <div class="product-info">
+                        <h3>Cleaning Supplies</h3>
+                        <p>Keep your home sparkling clean.</p>
+                        <p class="price">₹19.99</p>
+                        <p class="discount">Up to 20% Off</p>
+                        <p class="features">Eco-friendly, Multi-surface, Long-lasting</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="./images/kitchenware.jpg" alt="Kitchenware">
+                    <div class="product-info">
+                        <h3>Kitchenware</h3>
+                        <p>Essential tools for your kitchen.</p>
+                        <p class="price">₹34.99</p>
+                        <p class="discount">Up to 25% Off</p>
+                        <p class="features">Durable, Easy to clean, Ergonomic design</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2>Why City Mart?</h2>
+            <p>City Mart is your trusted local marketplace, built to serve every corner of your city. We connect you with nearby sellers, fresh food vendors, pet lovers, and essential service providers—all in one place. Our platform is designed for speed, simplicity, and satisfaction. Whether you're buying pet treats, groceries, or gadgets, you'll find quality, affordability, and friendly service every time.</p>
+            <p>We’re not just an online store—we’re your city’s digital heartbeat.</p>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <p>Email: info@citymart.com</p>
+            <p>Phone: (123) 456-7890</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 City Mart. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Vendors Modal -->
+    <div id="vendors-modal" class="vendors-modal">
+        <div class="vendors-content">
+            <span class="close" onclick="closeVendorsModal()">&times;</span>
+            <h2>🏪 Vendor Categories</h2>
+            <div class="vendor-categories">
+                <div class="vendor-category">
+                    <h3>🐾 Pet Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Local pet shops (food, toys, accessories)')">Local pet shops (food, toys, accessories)</li>
+                        <li onclick="navigateToProducts('Veterinary clinics (medicines, grooming)')">Veterinary clinics (medicines, grooming)</li>
+                        <li onclick="navigateToProducts('Pet grooming salons')">Pet grooming salons</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>🥕 Food & Grocery Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Fruit & vegetable sellers')">Fruit & vegetable sellers</li>
+                        <li onclick="navigateToProducts('Local dairy farms')">Local dairy farms</li>
+                        <li onclick="navigateToProducts('Bakeries and sweet shops')">Bakeries and sweet shops</li>
+                        <li onclick="navigateToProducts('Butchers and fishmongers')">Butchers and fishmongers</li>
+                        <li onclick="navigateToProducts('Packaged goods distributors')">Packaged goods distributors</li>
+                        <li onclick="navigateToProducts('Organic and health food stores')">Organic and health food stores</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>📱 Electronics Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Mobile and laptop dealers')">Mobile and laptop dealers</li>
+                        <li onclick="navigateToProducts('Repair shops and service centers')">Repair shops and service centers</li>
+                        <li onclick="navigateToProducts('Accessories retailers (chargers, cases, headphones)')">Accessories retailers (chargers, cases, headphones)</li>
+                        <li onclick="navigateToProducts('Appliance stores (TVs, refrigerators, mixers)')">Appliance stores (TVs, refrigerators, mixers)</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>🧹 Household Essentials Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Cleaning supply wholesalers')">Cleaning supply wholesalers</li>
+                        <li onclick="navigateToProducts('Kitchenware and utensils shops')">Kitchenware and utensils shops</li>
+                        <li onclick="navigateToProducts('Furniture and home decor sellers')">Furniture and home decor sellers</li>
+                        <li onclick="navigateToProducts('Local hardware stores')">Local hardware stores</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>👕 Clothing & Lifestyle Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Boutique clothing stores')">Boutique clothing stores</li>
+                        <li onclick="navigateToProducts('Shoe and accessories shops')">Shoe and accessories shops</li>
+                        <li onclick="navigateToProducts('Tailors and alteration services')">Tailors and alteration services</li>
+                        <li onclick="navigateToProducts('Beauty and skincare outlets')">Beauty and skincare outlets</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>📚 Stationery & Education Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Bookstores and school supply shops')">Bookstores and school supply shops</li>
+                        <li onclick="navigateToProducts('Coaching centers (for listing services)')">Coaching centers (for listing services)</li>
+                        <li onclick="navigateToProducts('Art and craft supply sellers')">Art and craft supply sellers</li>
+                    </ul>
+                </div>
+                <div class="vendor-category">
+                    <h3>🛠️ Local Services Vendors</h3>
+                    <ul>
+                        <li onclick="navigateToProducts('Electricians, plumbers, and carpenters')">Electricians, plumbers, and carpenters</li>
+                        <li onclick="navigateToProducts('Home cleaning services')">Home cleaning services</li>
+                        <li onclick="navigateToProducts('Delivery partners and logistics providers')">Delivery partners and logistics providers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-content">
+            <span class="close" onclick="closeCartModal()">&times;</span>
+            <h2>🛒 Your Cart</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total">
+                <p>Total: ₹<span id="cart-total">0.00</span></p>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="checkout-modal">
+        <div class="checkout-content">
+            <span class="close" onclick="closeCheckoutModal()">&times;</span>
+            <h2>Checkout</h2>
+            <form id="checkout-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+                <label for="address">Address:</label>
+                <textarea id="address" required></textarea>
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" required>
+                <button type="submit">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vendor Products Modal -->
+    <div id="vendor-products-modal" class="vendor-products-modal">
+        <div class="vendor-products-content">
+            <span class="close" onclick="closeVendorProductsModal()">&times;</span>
+            <h2 id="vendor-products-title">Vendor Products</h2>
+            <div class="product-grid" id="vendor-products-grid">
+                <!-- Products will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Budgies Modal -->
+    <div id="budgies-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBudgiesModal()">&times;</span>
+            <h2>Select Budgies Variant</h2>
+            <div id="budgies-variants-grid" class="product-grid"></div>
+        </div>
+    </div>
+
+</body>
+</html>
