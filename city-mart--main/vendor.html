@@ -350,6 +350,7 @@
 
                 const editBtn = document.createElement('button');
                 editBtn.type = 'button';
+                editBtn.className = 'vendor-action-btn vendor-action-edit';
                 editBtn.textContent = 'Edit';
                 editBtn.onclick = function () {
                     const nameInput = document.getElementById('vendor-product-name');
@@ -386,11 +387,39 @@
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
+                deleteBtn.className = 'vendor-action-btn vendor-action-delete';
                 deleteBtn.textContent = 'Delete';
                 deleteBtn.onclick = function () { deleteVendorProduct(product._id); };
 
+                // Stock status buttons
+                const outBtn = document.createElement('button');
+                outBtn.type = 'button';
+                outBtn.className = 'vendor-action-btn vendor-action-stock';
+                outBtn.textContent = 'Out of stock';
+                outBtn.onclick = function () {
+                    setProductStockStatus(product, false);
+                };
+
+                const inBtn = document.createElement('button');
+                inBtn.type = 'button';
+                inBtn.className = 'vendor-action-btn vendor-action-instock';
+                inBtn.textContent = 'In stock';
+                inBtn.onclick = function () {
+                    setProductStockStatus(product, true);
+                };
+
+                // Reflect current state (disable the active one)
+                const isOutOfStock = product.inStock === false;
+                if (isOutOfStock) {
+                    outBtn.disabled = true;
+                } else {
+                    inBtn.disabled = true;
+                }
+
                 actions.appendChild(editBtn);
                 actions.appendChild(deleteBtn);
+                actions.appendChild(outBtn);
+                actions.appendChild(inBtn);
                 info.appendChild(actions);
 
                 card.appendChild(img);
@@ -550,6 +579,59 @@
             } catch (err) {
                 console.error('Error loading vendor products:', err);
                 loadingEl.textContent = 'Error loading products. Please try again.';
+            }
+        }
+
+        async function setProductStockStatus(product, inStock) {
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+                // Mirror the fields used in handleVendorProductSubmit so the backend
+                // receives a complete product payload (avoids NaN price errors).
+                const formData = new FormData();
+                if (product.name != null) formData.append('name', product.name);
+                if (product.price != null) formData.append('price', String(product.price));
+                if (product.mainCategory) formData.append('mainCategory', product.mainCategory);
+                if (product.subCategory) formData.append('subCategory', product.subCategory);
+                if (product.brand) formData.append('brand', product.brand);
+                if (product.category) formData.append('category', product.category);
+                if (product.description) formData.append('description', product.description);
+                if (product.discount) formData.append('discount', product.discount);
+                if (product.features) formData.append('features', product.features);
+                if (product.deliveryTime) formData.append('deliveryTime', product.deliveryTime);
+                formData.append('inStock', String(inStock));
+
+                const resp = await fetch(apiBase + '/api/products/' + product._id, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                    body: formData,
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to update stock status.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast(inStock ? 'Product marked as in stock.' : 'Product marked as out of stock.', 'success');
+                }
+
+                // Refresh the list so button label and badge update
+                refreshVendorProductsList();
+            } catch (err) {
+                console.error('Error updating stock status:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while updating stock.', 'error');
+                }
             }
         }
 

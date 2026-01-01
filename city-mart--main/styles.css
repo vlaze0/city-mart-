@@ -1218,12 +1218,94 @@ nav ul li a:hover {
 .vendor-products-grid {
     margin-top: 0.5rem;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 0.9rem;
+    /* wider cards so content + 4 buttons fit nicely */
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.1rem;
 }
 
 .vendor-products-grid .product-card {
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 10px 26px rgba(15,23,42,0.06);
+    padding-bottom: 1rem;           /* extra room for action buttons */
+    min-height: 320px;              /* taller so text + 4 buttons fit */
+    height: auto;                   /* allow growth with content */
+    overflow: visible;              /* do not clip action buttons */
+}
+
+.vendor-products-grid .product-card .product-info {
+    flex: 1;
+    padding-bottom: 0.75rem;        /* keep content away from bottom edge */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Vendor product action buttons (Edit / Delete / Out of stock / In stock) */
+.vendor-product-actions {
+    display: flex;
+    flex-wrap: wrap;              /* allow buttons to go to 2nd line if needed */
+    gap: 0.35rem 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.vendor-action-btn {
+    border-radius: 999px;
+    padding: 0.22rem 0.75rem;
+    font-size: 0.78rem;
+    border: 1px solid transparent;
+    background: #f3f4f6;
+    color: #111827;
+    cursor: pointer;
+    white-space: nowrap;          /* keep label on one line per pill */
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.vendor-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+}
+
+.vendor-action-btn[disabled] {
+    opacity: 0.65;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+}
+
+.vendor-action-edit {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.vendor-action-edit:hover {
+    background: #1d4ed8;
+}
+
+.vendor-action-delete {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.vendor-action-delete:hover {
+    background: #fecaca;
+}
+
+.vendor-action-stock {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.vendor-action-stock:hover:not([disabled]) {
+    background: #fde68a;
+}
+
+.vendor-action-instock {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.vendor-action-instock:hover:not([disabled]) {
+    background: #bbf7d0;
 }
 
 .vendor-last-orders-list {
@@ -1488,6 +1570,13 @@ nav ul li a:hover {
     font-size: 1.2rem;
 }
 
+.out-of-stock-label {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #b91c1c;
+}
+
 .discount {
     color: #27ae60;
     font-weight: bold;
@@ -1562,6 +1651,14 @@ nav ul li a:hover {
     background: linear-gradient(45deg, #2980b9, #3498db);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(52,152,219,0.4);
+}
+
+.add-to-cart-disabled,
+.add-to-cart-disabled:hover {
+    background: #d1d5db;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
 }
 
 /* About and Contact sections */

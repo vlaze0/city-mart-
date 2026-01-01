@@ -321,6 +321,14 @@
         price.textContent = '₹' + Number(product.price || 0).toFixed(2);
         info.appendChild(price);
 
+        const isOutOfStock = product.inStock === false;
+        if (isOutOfStock) {
+            const oos = document.createElement('p');
+            oos.className = 'out-of-stock-label';
+            oos.textContent = 'Out of stock';
+            info.appendChild(oos);
+        }
+
         if (product.discount) {
             const d = document.createElement('p');
             d.className = 'discount';
@@ -373,10 +381,35 @@
 
         const addBtn = document.createElement('button');
         addBtn.className = 'add-to-cart';
-        addBtn.textContent = 'Add to Cart';
-        addBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (sizes.length && !selectedSize) {
+
+        const isOutOfStock = product.inStock === false;
+        if (isOutOfStock) {
+            addBtn.textContent = 'Out of stock';
+            addBtn.disabled = true;
+            addBtn.classList.add('add-to-cart-disabled');
+        } else {
+            addBtn.textContent = 'Add to Cart';
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sizes.length && !selectedSize) {
+                    if (window.showToast) {
+                        window.showToast('Please select a size before adding to cart.', 'error');
+                    } else {
+                        alert('Please select a size before adding to cart.');
+                    }
+                    return;
+                }
+                const displayName = selectedSize ? `${product.name} (Size ${selectedSize})` : product.name;
+                addToCart(
+                    product._id,
+                    displayName,
+                    Number(product.price || 0),
+                    product.category,
+                    product.image || './images/placeholder.jpg',
+                    { size: selectedSize, skipGenderModal: true }
+                );
+            });
+        }
                 if (window.showToast) {
                     window.showToast('Please select a size before adding to cart.', 'error');
                 } else {
