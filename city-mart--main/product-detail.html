@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Mart - Product Detail</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+</head>
+<body>
+<header>
+    <div class="container">
+        <div class="navbar-left">
+            <h1>City Mart</h1>
+        </div>
+        <div class="navbar-right">
+            <nav>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="#" onclick="showVendorsModal()">Product</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li class="user-menu">
+                        <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
+                        <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
+                    </li>
+                </ul>
+            </nav>
+            <div class="cart-icon" onclick="showCartModal()">
+                🛒
+                <span id="cart-count">0</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main style="margin-top: 100px; padding: 2rem 0; background:#f5f6fa;">
+    <div class="container" id="product-detail-root">
+        <!-- Filled by script -->
+    </div>
+</main>
+
+<!-- Cart Modal (same structure as products/index pages) -->
+<div id="cart-modal" class="cart-modal">
+    <div class="cart-content">
+        <div class="cart-layout">
+            <div class="cart-items-panel">
+                <span class="close" onclick="closeCartModal()">&times;</span>
+                <h2>My Cart</h2>
+                <div id="cart-items"></div>
+            </div>
+            <div class="cart-summary-panel">
+                <div class="cart-summary-title">Price Details</div>
+                <div class="cart-total">
+                    <p>Total Amount: ₹<span id="cart-total">0.00</span></p>
+                    <p id="cart-discount-line"></p>
+                    <p class="cart-saving-text" id="cart-saving-text"></p>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Place Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkout-modal" class="checkout-modal">
+  <div class="checkout-content checkout-page">
+    <span class="close" onclick="closeCheckoutModal()">&times;</span>
+
+    <div class="checkout-layout">
+      <!-- Left: shipping address -->
+      <section class="checkout-left">
+        <h2>Checkout</h2>
+
+        <form id="checkout-form">
+          <h3>Shipping Address</h3>
+
+          <label for="name">Full Name<span class="required">*</span></label>
+          <input type="text" id="name" required>
+
+          <label for="phone">Phone Number<span class="required">*</span></label>
+          <input type="tel" id="phone" required>
+
+          <label for="email">Email address (optional)</label>
+          <input type="email" id="email">
+
+          <label for="address">Address<span class="required">*</span></label>
+          <textarea id="address" required></textarea>
+
+          <label for="order-notes">Order notes (optional)</label>
+          <textarea id="order-notes" placeholder="Any delivery notes..."></textarea>
+
+          <button type="submit" class="checkout-primary-btn">Place Order</button>
+        </form>
+      </section>
+
+      <!-- Right: order summary -->
+      <section class="checkout-right">
+        <h3>Your order</h3>
+
+        <div class="checkout-order-card">
+          <div class="checkout-order-main">
+            <img id="checkout-order-image" src="./images/placeholder.jpg" alt="Product">
+            <div class="checkout-order-text">
+              <div id="checkout-order-name">Your items</div>
+              <div id="checkout-order-meta">Quantity: <span id="checkout-order-qty">0</span></div>
+            </div>
+          </div>
+
+          <!-- Filled at checkout() time with a line per cart item -->
+          <div id="checkout-items-list" class="checkout-items-list"></div>
+
+          <!-- Payment methods -->
+          <div class="checkout-payment-section">
+            <h4>How you'll pay</h4>
+            <div class="checkout-payment-options">
+              <label class="payment-option">
+                <input type="radio" name="payment-method" value="card" checked>
+                <span class="payment-option-label">Card</span>
+                <span class="payment-option-icons">💳</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment-method" value="upi">
+                <span class="payment-option-label">UPI</span>
+                <span class="payment-option-icons">📱</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment-method" value="cod">
+                <span class="payment-option-label">Cash on Delivery</span>
+              </label>
+            </div>
+
+            <!-- Card details -->
+            <div class="payment-details" id="payment-details-card">
+              <div class="payment-field-row">
+                <label for="card-number">Card number</label>
+                <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
+              </div>
+              <div class="payment-field-row payment-field-row-inline">
+                <div>
+                  <label for="card-name">Name on card</label>
+                  <input type="text" id="card-name" placeholder="Full name">
+                </div>
+                <div>
+                  <label for="card-expiry">Expiry</label>
+                  <input type="text" id="card-expiry" placeholder="MM/YY">
+                </div>
+              </div>
+            </div>
+
+            <!-- UPI details -->
+            <div class="payment-details" id="payment-details-upi" style="display:none;">
+              <div class="payment-field-row">
+                <label for="upi-id">UPI ID</label>
+                <input type="text" id="upi-id" placeholder="name@bank">
+              </div>
+            </div>
+
+            <!-- COD info -->
+            <div class="payment-details" id="payment-details-cod" style="display:none;">
+              <p class="payment-cod-note">You will pay in cash to the delivery partner when your order arrives.</p>
+            </div>
+          </div>
+
+          <div class="checkout-order-pricing">
+            <div class="checkout-row">
+              <span>Items total</span>
+              <span>₹<span id="checkout-items-total">0.00</span></span>
+            </div>
+            <div class="checkout-row">
+              <span>Shop discount</span>
+              <span>-₹<span id="checkout-discount">0.00</span></span>
+            </div>
+            <div class="checkout-row">
+              <span>Subtotal</span>
+              <span>₹<span id="checkout-subtotal">0.00</span></span>
+            </div>
+            <div class="checkout-row">
+              <span>Shipping</span>
+              <span>₹<span id="checkout-shipping">0.00</span></span>
+            </div>
+            <div class="checkout-row checkout-total-row">
+              <span>Total</span>
+              <span>₹<span id="checkout-total-amount">0.00</span></span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2023 City Mart. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Simple helper to parse Sizes: ... from features string
+    function parseSizesFromFeatures(features) {
+        if (!features) return [];
+        if (!/sizes\s*:/i.test(features)) return [];
+        const m = features.match(/sizes\s*:\s*([^|]*)/i);
+        if (!m || !m[1]) return [];
+        return m[1].split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function stripSizesFromFeatures(features) {
+        if (!features) return '';
+        if (!/sizes\s*:/i.test(features)) return features;
+        return features.replace(/sizes\s*:[^|]*(\|\s*)?/i, '').trim();
+    }
+
+    async function loadProductDetail() {
+        const root = document.getElementById('product-detail-root');
+        if (!root) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('productId');
+        if (!productId) {
+            root.innerHTML = '<p>Product not found.</p>';
+            return;
+        }
+
+        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+        try {
+            const resp = await fetch(apiBase + '/api/products/' + encodeURIComponent(productId));
+            if (!resp.ok) {
+                root.innerHTML = '<p>Unable to load product.</p>';
+                return;
+            }
+            const product = await resp.json();
+
+            // Update recently viewed list in localStorage
+            try {
+                const key = 'citymart_recently_viewed';
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const filtered = existing.filter(p => p._id !== product._id);
+                filtered.unshift({
+                    _id: product._id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    mainCategory: product.mainCategory,
+                    subCategory: product.subCategory,
+                    category: product.category,
+                    brand: product.brand
+                });
+                localStorage.setItem(key, JSON.stringify(filtered.slice(0, 12)));
+            } catch (e) { }
+
+            renderProductDetail(root, product, apiBase);
+            loadSimilarAndRecent(product, apiBase);
+        } catch (err) {
+            console.error('Error loading product detail', err);
+            root.innerHTML = '<p>Error loading product detail.</p>';
+        }
+    }
+
+    function renderProductDetail(root, product, apiBase) {
+        const allImages = Array.isArray(product.images) && product.images.length ? product.images : [product.image || './images/placeholder.jpg'];
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'product-card product-card-detailed';
+
+        // Gallery
+        const gallery = document.createElement('div');
+        gallery.className = 'product-gallery';
+
+        const mainImg = document.createElement('img');
+        mainImg.className = 'product-main-img';
+        mainImg.src = allImages[0] || './images/placeholder.jpg';
+        mainImg.alt = product.name;
+        mainImg.onerror = function () { this.src = './images/placeholder.jpg'; };
+
+        const thumbs = document.createElement('div');
+        thumbs.className = 'product-thumbs';
+        allImages.slice(0,4).forEach((src, idx) => {
+            const t = document.createElement('img');
+            t.src = src;
+            t.alt = product.name + ' view ' + (idx + 1);
+            t.onerror = function () { this.src = './images/placeholder.jpg'; };
+            if (idx === 0) t.classList.add('product-thumb-active');
+            t.addEventListener('click', (e) => {
+                e.stopPropagation();
+                mainImg.src = src;
+                thumbs.querySelectorAll('img').forEach(imgEl => imgEl.classList.remove('product-thumb-active'));
+                t.classList.add('product-thumb-active');
+            });
+            thumbs.appendChild(t);
+        });
+
+        gallery.appendChild(mainImg);
+        gallery.appendChild(thumbs);
+
+        // Info
+        const info = document.createElement('div');
+        info.className = 'product-info product-info-detailed';
+
+        const title = document.createElement('h2');
+        title.textContent = product.name;
+        info.appendChild(title);
+
+        if (product.brand) {
+            const b = document.createElement('p');
+            b.className = 'brand';
+            b.textContent = 'Brand: ' + product.brand;
+            info.appendChild(b);
+        }
+
+        const cat = document.createElement('p');
+        cat.className = 'sub-category';
+        cat.textContent = 'Category: ' + (product.subCategory || product.category || '');
+        info.appendChild(cat);
+
+        const price = document.createElement('p');
+        price.className = 'price';
+        price.textContent = '₹' + Number(product.price || 0).toFixed(2);
+        info.appendChild(price);
+
+        const isOutOfStock = product.inStock === false;
+        if (isOutOfStock) {
+            const oos = document.createElement('p');
+            oos.className = 'out-of-stock-label';
+            oos.textContent = 'Out of stock';
+            info.appendChild(oos);
+        }
+
+        if (product.discount) {
+            const d = document.createElement('p');
+            d.className = 'discount';
+            d.textContent = product.discount;
+            info.appendChild(d);
+        }
+
+        const cleanFeatures = stripSizesFromFeatures(product.features);
+        if (cleanFeatures) {
+            const feat = document.createElement('p');
+            feat.className = 'features';
+            feat.textContent = cleanFeatures;
+            info.appendChild(feat);
+        }
+
+        if (product.deliveryTime) {
+            const del = document.createElement('p');
+            del.className = 'delivery-time';
+            del.textContent = 'Delivery: ' + product.deliveryTime;
+            info.appendChild(del);
+        }
+
+        // Size selector
+        const sizes = parseSizesFromFeatures(product.features);
+        let selectedSize = null;
+        if (sizes.length) {
+            const sizeWrap = document.createElement('div');
+            sizeWrap.className = 'size-selector';
+
+            const label = document.createElement('span');
+            label.textContent = 'Size - UK/India:';
+            sizeWrap.appendChild(label);
+
+            sizes.forEach(size => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'size-chip';
+                btn.textContent = size;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedSize = size;
+                    sizeWrap.querySelectorAll('.size-chip').forEach(b => b.classList.remove('size-chip-selected'));
+                    btn.classList.add('size-chip-selected');
+                });
+                sizeWrap.appendChild(btn);
+            });
+
+            info.appendChild(sizeWrap);
+        }
+
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-to-cart';
+
+        const isOutOfStock = product.inStock === false;
+        if (isOutOfStock) {
+            addBtn.textContent = 'Out of stock';
+            addBtn.disabled = true;
+            addBtn.classList.add('add-to-cart-disabled');
+        } else {
+            addBtn.textContent = 'Add to Cart';
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sizes.length && !selectedSize) {
+                    if (window.showToast) {
+                        window.showToast('Please select a size before adding to cart.', 'error');
+                    } else {
+                        alert('Please select a size before adding to cart.');
+                    }
+                    return;
+                }
+                const displayName = selectedSize ? `${product.name} (Size ${selectedSize})` : product.name;
+                addToCart(
+                    product._id,
+                    displayName,
+                    Number(product.price || 0),
+                    product.category,
+                    product.image || './images/placeholder.jpg',
+                    { size: selectedSize, skipGenderModal: true }
+                );
+            });
+        }
+                if (window.showToast) {
+                    window.showToast('Please select a size before adding to cart.', 'error');
+                } else {
+                    alert('Please select a size before adding to cart.');
+                }
+                return;
+            }
+            const displayName = selectedSize ? `${product.name} (Size ${selectedSize})` : product.name;
+            addToCart(
+                product._id,
+                displayName,
+                Number(product.price || 0),
+                product.category,
+                product.image || './images/placeholder.jpg',
+                { size: selectedSize, skipGenderModal: true }
+            );
+        });
+
+        info.appendChild(addBtn);
+
+        wrapper.appendChild(gallery);
+        wrapper.appendChild(info);
+
+        // Containers for similar and recent
+        const similarSection = document.createElement('section');
+        similarSection.id = 'similar-products-section';
+        similarSection.style.marginTop = '2rem';
+
+        const recentSection = document.createElement('section');
+        recentSection.id = 'recent-products-section';
+        recentSection.style.marginTop = '2rem';
+
+        root.innerHTML = '';
+        root.appendChild(wrapper);
+        root.appendChild(similarSection);
+        root.appendChild(recentSection);
+    }
+
+    async function loadSimilarAndRecent(product, apiBase) {
+        const similarRoot = document.getElementById('similar-products-section');
+        const recentRoot = document.getElementById('recent-products-section');
+        if (!similarRoot || !recentRoot) return;
+
+        try {
+            const resp = await fetch(apiBase + '/api/products');
+            if (!resp.ok) return;
+            const all = await resp.json();
+            // Similar products: same main/sub category (or category), not the same id
+            let similar = all.filter(p => String(p._id) !== String(product._id));
+            if (product.mainCategory) {
+                const m = product.mainCategory.toLowerCase();
+                similar = similar.filter(p => (p.mainCategory || '').toLowerCase() === m);
+            }
+            if (product.subCategory) {
+                const s = product.subCategory.toLowerCase();
+                similar = similar.filter(p => (p.subCategory || '').toLowerCase() === s);
+            }
+            if (!product.subCategory && product.category) {
+                const c = product.category.toLowerCase();
+                similar = similar.filter(p => (p.category || '').toLowerCase() === c);
+            }
+            similar = similar.slice(0, 8);
+
+            renderProductStrip(similarRoot, 'Similar products', similar);
+        } catch (e) {
+            console.warn('Could not load similar products', e);
+        }
+
+        // Recently viewed from localStorage
+        try {
+            const key = 'citymart_recently_viewed';
+            const stored = JSON.parse(localStorage.getItem(key) || '[]');
+            const recent = stored.filter(p => p._id !== product._id).slice(0, 10);
+            renderProductStrip(recentRoot, 'Recently viewed', recent);
+        } catch (e) {
+            console.warn('Could not load recent products', e);
+        }
+    }
+
+    function renderProductStrip(root, title, items) {
+        root.innerHTML = '';
+        const h = document.createElement('h3');
+        h.textContent = title;
+        h.style.marginBottom = '0.75rem';
+        root.appendChild(h);
+
+        if (!items || !items.length) {
+            const p = document.createElement('p');
+            p.textContent = 'No items to show.';
+            root.appendChild(p);
+            return;
+        }
+
+        const strip = document.createElement('div');
+        strip.className = 'product-strip';
+
+        items.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card product-card-mini';
+            card.addEventListener('click', () => {
+                window.location.href = 'product-detail.html?productId=' + encodeURIComponent(product._id);
+            });
+
+            const img = document.createElement('img');
+            img.src = product.image || './images/placeholder.jpg';
+            img.alt = product.name;
+            img.onerror = function () { this.src = './images/placeholder.jpg'; };
+            card.appendChild(img);
+
+            const info = document.createElement('div');
+            info.className = 'product-info';
+
+            const nameEl = document.createElement('h4');
+            nameEl.textContent = product.name;
+            info.appendChild(nameEl);
+
+            const priceEl = document.createElement('p');
+            priceEl.className = 'price';
+            priceEl.textContent = '₹' + Number(product.price || 0).toFixed(2);
+            info.appendChild(priceEl);
+
+            card.appendChild(info);
+            strip.appendChild(card);
+        });
+
+        root.appendChild(strip);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProductDetail);
+</script>
+
+</body>
+</html>
