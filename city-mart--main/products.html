@@ -256,7 +256,7 @@
                     const addBtn = document.createElement('button');
                     addBtn.className = 'add-to-cart';
 
-                    const isOutOfStock = product.inStock === false;
+                    // use the isOutOfStock flag defined above for this product
                     if (isOutOfStock) {
                         addBtn.textContent = 'Out of stock';
                         addBtn.disabled = true;
@@ -284,23 +284,6 @@
                             );
                         });
                     }
-                            if (window.showToast) {
-                                window.showToast('Please select a size before adding to cart.', 'error');
-                            } else {
-                                alert('Please select a size before adding to cart.');
-                            }
-                            return;
-                        }
-                        const displayName = selectedSize ? `${product.name} (Size ${selectedSize})` : product.name;
-                        addToCart(
-                            product._id,
-                            displayName,
-                            Number(product.price || 0),
-                            product.category,
-                            product.image || './images/placeholder.jpg',
-                            { size: selectedSize }
-                        );
-                    });
 
                     info.appendChild(addBtn);
 
