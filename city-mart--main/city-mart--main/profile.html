@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - City Mart</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body class="customer-dashboard-page">
+<header>
+    <div class="container">
+        <div class="navbar-left">
+            <a href="index.html" class="navbar-logo-link">
+<img src="./images/logo.svg" onerror="this.onerror=null;this.src='./images/logo.png';" alt="CityMart" class="navbar-logo">
+            </a>
+        </div>
+        <div class="global-search-wrapper">
+            <form class="global-search-form" onsubmit="return handleGlobalSearchSubmit(event)">
+                <input type="text" id="global-search-input" class="global-search-input" placeholder="Search products (name, brand, category...)" />
+                <button type="submit" class="global-search-button">Search</button>
+            </form>
+        </div>
+        <div class="navbar-right">
+            <nav>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="#" onclick="showVendorsModal()">Product</a></li>
+                    <li><a href="#" onclick="showOrdersModal()">My Orders</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li class="user-menu">
+                        <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
+                        <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
+                    </li>
+                </ul>
+            </nav>
+            <div class="cart-icon" onclick="showCartModal()">
+                🛒
+                <span id="cart-count">0</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="customer-dashboard-layout">
+    <aside class="customer-dashboard-sidebar">
+        <div class="customer-sidebar-header">
+            <div class="customer-avatar-large">
+                <img id="cd-avatar" src="./images/placeholder.jpg" alt="Customer avatar">
+            </div>
+            <div>
+                <h2 id="cd-name">Brooklyn Simmons</h2>
+                <p id="cd-status" class="cd-status-pill cd-status-active">Active</p>
+            </div>
+        </div>
+
+        <nav class="customer-sidebar-nav">
+            <p class="customer-sidebar-section">Account</p>
+            <button class="customer-sidebar-link customer-sidebar-link-active" data-tab="overview">Overview</button>
+            <button class="customer-sidebar-link" data-tab="addresses">Addresses</button>
+            <button class="customer-sidebar-link" data-tab="payments">Payment methods</button>
+            <button class="customer-sidebar-link" data-tab="security">Security</button>
+
+            <p class="customer-sidebar-section">Support</p>
+            <button class="customer-sidebar-link" data-tab="help">Help &amp; support</button>
+            <button class="customer-sidebar-link" data-tab="report">Report an issue</button>
+        </nav>
+        <input type="file" id="cd-avatar-input" accept="image/*" style="display:none">
+    </aside>
+
+    <section class="customer-dashboard-main">
+        <div class="customer-dashboard-header-row">
+            <div>
+                <h1>Customer Details</h1>
+                <p class="customer-dashboard-subtitle">Overview of your purchases and recent activity.</p>
+            </div>
+            <div class="customer-dashboard-meta">
+                <div>
+                    <span class="meta-label">Customer ID</span>
+                    <span id="cd-id" class="meta-value">CUST-1024</span>
+                </div>
+                <div>
+                    <span class="meta-label">Member since</span>
+                    <span id="cd-since" class="meta-value">Sep 06, 2022</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview tab content -->
+        <section class="customer-tab-section" id="cd-tab-overview">
+        <section class="customer-dashboard-top">
+            <div class="customer-profile-card">
+                <div class="customer-profile-main">
+                    <div>
+                        <h2 id="cd-name-main">Brooklyn Simmons</h2>
+                        <p class="cd-status-pill cd-status-active">Active</p>
+                    </div>
+                    <div class="customer-profile-quick-actions">
+                        <button class="btn-secondary-sm">Call</button>
+                        <button class="btn-secondary-sm">Message</button>
+                        <button class="btn-secondary-sm">Email</button>
+                    </div>
+                </div>
+
+                <div class="customer-profile-details-grid">
+                    <div>
+                        <p class="label">Email address</p>
+                        <p id="cd-email">you@example.com</p>
+                    </div>
+                    <div>
+                        <p class="label">Phone number</p>
+                        <p id="cd-phone">+91-98765 12345</p>
+                    </div>
+                    <div>
+                        <p class="label">Default address</p>
+                        <p id="cd-address">4140 Parker Rd. Allentown, New Mexico 31134</p>
+                    </div>
+                    <div>
+                        <p class="label">Last transaction</p>
+                        <p id="cd-last-transaction">12 December, 2023</p>
+                    </div>
+                </div>
+
+                <div class="customer-recent-activity">
+                    <p class="label">Recent activity</p>
+                    <ul>
+                        <li>Support chat - 2 days ago</li>
+                        <li>Order delivered - 5 days ago</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="customer-kpi-card">
+                <h3>Spending overview</h3>
+                <div class="customer-kpi-grid">
+                    <div class="customer-kpi-item">
+                        <span class="kpi-label">Total spent</span>
+                        <span id="cd-total-spent" class="kpi-value">₹42,400</span>
+                    </div>
+                    <div class="customer-kpi-item">
+                        <span class="kpi-label">Total orders</span>
+                        <span id="cd-total-orders" class="kpi-value">24</span>
+                    </div>
+                    <div class="customer-kpi-item">
+                        <span class="kpi-label">Completed</span>
+                        <span id="cd-complete-orders" class="kpi-value">20</span>
+                    </div>
+                    <div class="customer-kpi-item">
+                        <span class="kpi-label">Pending</span>
+                        <span id="cd-pending-orders" class="kpi-value">4</span>
+                    </div>
+                </div>
+                <div class="customer-mini-chart-placeholder">
+                    <span>Spending trend (placeholder)</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="customer-orders-section">
+            <div class="customer-orders-header">
+                <div>
+                    <h2>All Orders</h2>
+                    <p class="customer-orders-subtitle">Recent purchases for this customer.</p>
+                </div>
+                <div class="customer-orders-filters">
+                    <select id="cd-order-filter-status">
+                        <option value="all">All status</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <input type="text" id="cd-order-search" placeholder="Search by product or order id">
+                </div>
+            </div>
+
+            <table class="customer-orders-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order ID</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="cd-orders-tbody">
+                    <!-- Filled by script below -->
+                </tbody>
+            </table>
+        </section>
+        </section> <!-- /overview tab -->
+
+        <!-- Addresses tab -->
+        <section class="customer-tab-section" id="cd-tab-addresses" style="display:none">
+            <div class="customer-profile-card">
+                <h3>Saved addresses</h3>
+                <p style="font-size:0.9rem; color:#6b7280; margin-bottom:0.75rem;">Manage your default delivery address and other saved locations.</p>
+                <p style="font-size:0.85rem; color:#9ca3af;">(Demo) Address management will be wired to your real profile data later.</p>
+            </div>
+        </section>
+
+        <!-- Payments tab -->
+        <section class="customer-tab-section" id="cd-tab-payments" style="display:none">
+            <div class="customer-profile-card">
+                <h3>Payment methods</h3>
+                <p style="font-size:0.9rem; color:#6b7280; margin-bottom:0.75rem;">Add or update your preferred payment options.</p>
+                <ul style="font-size:0.85rem; color:#4b5563; list-style:disc; padding-left:1.25rem;">
+                    <li>Cash on delivery</li>
+                    <li>UPI IDs</li>
+                    <li>Cards (debit / credit)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Security tab -->
+        <section class="customer-tab-section" id="cd-tab-security" style="display:none">
+            <div class="customer-profile-card">
+                <h3>Security</h3>
+                <p style="font-size:0.9rem; color:#6b7280; margin-bottom:0.75rem;">Keep your City Mart account safe.</p>
+                <ul style="font-size:0.85rem; color:#4b5563; list-style:disc; padding-left:1.25rem;">
+                    <li>Update password</li>
+                    <li>Turn on login alerts</li>
+                    <li>Review active sessions</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Help tab -->
+        <section class="customer-tab-section" id="cd-tab-help" style="display:none">
+            <div class="customer-profile-card">
+                <h3>Help &amp; support</h3>
+                <p style="font-size:0.9rem; color:#6b7280; margin-bottom:0.75rem;">Need help with an order or your account? Reach out to us.</p>
+                <p style="font-size:0.85rem; color:#4b5563;">Email: support@citymart.local (demo)</p>
+            </div>
+        </section>
+
+        <!-- Report tab -->
+        <section class="customer-tab-section" id="cd-tab-report" style="display:none">
+            <div class="customer-profile-card">
+                <h3>Report an issue</h3>
+                <p style="font-size:0.9rem; color:#6b7280; margin-bottom:0.75rem;">Tell us what went wrong and well get back to you.</p>
+                <textarea rows="4" style="width:100%; padding:0.75rem; border-radius:0.75rem; border:1px solid #e5e7eb; font-size:0.9rem; resize:vertical;"></textarea>
+            </div>
+        </section>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const demoOrders = [
+            { date: '26 Jan, 2023', id: '246522114', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Pending' },
+            { date: '20 Jan, 2023', id: '246522089', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Completed' },
+            { date: '14 Jan, 2023', id: '246521900', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'UPI', status: 'Completed' }
+        ];
+
+        const tbody = document.getElementById('cd-orders-tbody');
+        const statusFilter = document.getElementById('cd-order-filter-status');
+        const searchInput = document.getElementById('cd-order-search');
+
+        // ----- Orders table filter/search -----
+        function renderOrders() {
+            if (!tbody) return;
+            const statusVal = statusFilter.value;
+            const query = searchInput.value.trim().toLowerCase();
+            tbody.innerHTML = '';
+
+            demoOrders
+                .filter(o => statusVal === 'all' || o.status.toLowerCase() === statusVal.toLowerCase())
+                .filter(o => !query || o.product.toLowerCase().includes(query) || o.id.toLowerCase().includes(query))
+                .forEach(o => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${o.date}</td>
+                        <td>${o.id}</td>
+                        <td>${o.product}</td>
+                        <td>${o.price}</td>
+                        <td>${o.payment}</td>
+                        <td><span class="status-pill ${o.status === 'Completed' ? 'status-active' : 'status-muted'}">${o.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+        }
+
+        statusFilter.addEventListener('change', renderOrders);
+        searchInput.addEventListener('input', renderOrders);
+        renderOrders();
+
+        // ----- Sidebar tab switching -----
+        const tabButtons = document.querySelectorAll('.customer-sidebar-link');
+        const tabSections = document.querySelectorAll('.customer-tab-section');
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-tab');
+                if (!target) return;
+                tabButtons.forEach(b => b.classList.remove('customer-sidebar-link-active'));
+                btn.classList.add('customer-sidebar-link-active');
+                tabSections.forEach(sec => {
+                    const id = sec.id || '';
+                    if (id === 'cd-tab-' + target) {
+                        sec.style.display = '';
+                    } else {
+                        sec.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // ----- Avatar upload / choose avatar -----
+        const avatarImg = document.getElementById('cd-avatar');
+        const avatarInput = document.getElementById('cd-avatar-input');
+
+        function loadStoredAvatar() {
+            try {
+                const stored = localStorage.getItem('citymart_profile_avatar');
+                if (stored && avatarImg) {
+                    avatarImg.src = stored;
+                }
+            } catch (e) {
+                console.warn('Could not load stored avatar', e);
+            }
+        }
+
+        function handleAvatarFileChange(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file || !avatarImg) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const dataUrl = ev.target.result;
+                avatarImg.src = dataUrl;
+                try {
+                    localStorage.setItem('citymart_profile_avatar', dataUrl);
+                } catch (err) {
+                    console.warn('Could not store avatar in localStorage', err);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        if (avatarImg && avatarInput) {
+            loadStoredAvatar();
+            avatarImg.style.cursor = 'pointer';
+            avatarImg.addEventListener('click', () => {
+                const useUpload = confirm('Do you want to upload a profile photo? Click OK to choose a file, or Cancel to use the default avatar.');
+                if (useUpload) {
+                    avatarInput.click();
+                } else {
+                    avatarImg.src = './images/placeholder.jpg';
+                    try {
+                        localStorage.removeItem('citymart_profile_avatar');
+                    } catch (e) {}
+                }
+            });
+            avatarInput.addEventListener('change', handleAvatarFileChange);
+        }
+    });
+</script>
+
+<!-- Login Options Modal -->
+<div id="login-options-modal" class="login-options-modal">
+    <div class="login-options-content">
+        <span class="close" onclick="closeLoginOptionsModal()">&times;</span>
+        <h2>Select Login Type</h2>
+        <div class="login-options">
+            <button type="button" onclick="startLoginAs('customer')">Customer Login</button>
+            <button type="button" onclick="startLoginAs('vendor')">Vendor Login</button>
+        </div>
+    </div>
+</div>
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="auth-modal">
+    <div class="auth-content">
+        <span class="close" onclick="closeAuthModal()">&times;</span>
+        <h2 id="auth-modal-title">Login</h2>
+        <form id="login-form">
+            <input type="text" id="login-username" placeholder="Name" required>
+            <input type="text" id="login-email" placeholder="Email or phone" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button type="submit" id="auth-submit-button">Login</button>
+        </form>
+        <p id="login-status"></p>
+        <p class="auth-switch">
+            <a href="#" onclick="switchAuthMode(event)">New user? Sign up</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
