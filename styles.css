@@ -1568,6 +1568,27 @@ nav ul li a:hover {
     background: #bbf7d0;
 }
 
+/* Footer policy links */
+.footer-links {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.footer-links a {
+    color: #000000;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+.footer-links span {
+    margin: 0 0.35rem;
+    color: #000000;
+}
+
 .vendor-last-orders-list {
     list-style: none;
     padding: 0;
