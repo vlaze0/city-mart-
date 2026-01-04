@@ -1911,26 +1911,47 @@ function logoutFromMenu() {
 }
 
 // Global search bar handler (header search on all pages)
-// Compact behavior: when empty, first click just expands the search box.
+// Mobile: icon toggles a bar below navbar. Desktop: behavior unchanged.
 function handleGlobalSearchSubmit(event) {
     if (event) event.preventDefault();
+
     const wrapper = document.querySelector('.global-search-wrapper');
     const input = document.getElementById('global-search-input');
-    if (!input || !wrapper) return false;
+    if (!wrapper || !input) return false;
 
     const raw = input.value || '';
     const query = raw.trim();
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    // If no query, toggle open state and focus instead of navigating.
+    // No text: treat as toggle of the search UI, not a navigation
     if (!query) {
-        if (!wrapper.classList.contains('global-search-open')) {
-            wrapper.classList.add('global-search-open');
-            input.focus();
+        if (isMobile) {
+            const isOpen = wrapper.classList.contains('global-search-open');
+
+            if (isOpen) {
+                wrapper.classList.remove('global-search-open');
+                document.documentElement.classList.remove('mobile-search-open');
+            } else {
+                wrapper.classList.add('global-search-open');
+                document.documentElement.classList.add('mobile-search-open');
+                input.focus();
+            }
         } else {
-            // already open but still empty: just focus
-            input.focus();
+            // Desktop: keep original behavior (only expand, no close-on-click)
+            if (!wrapper.classList.contains('global-search-open')) {
+                wrapper.classList.add('global-search-open');
+                input.focus();
+            } else {
+                input.focus();
+            }
         }
         return false;
+    }
+
+    // With a query: navigate to products page as before
+    wrapper.classList.add('global-search-open');
+    if (isMobile) {
+        document.documentElement.classList.remove('mobile-search-open');
     }
 
     const params = new URLSearchParams();
@@ -1948,6 +1969,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const trolleyModal = document.getElementById('vendors-cart-modal');
     if (trolleyModal) {
         trolleyModal.style.display = 'none';
+    }
+
+    // Mobile hamburger: toggle mobile menu
+    const hamburger = document.querySelector('.hamburger');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    if (hamburger && mobileMenu) {
+        hamburger.addEventListener('click', function () {
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when any link is clicked (better UX)
+        mobileMenu.addEventListener('click', function (e) {
+            const target = e.target;
+            if (target && target.tagName === 'A') {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
     }
 
     // Close user dropdown when clicking outside

@@ -4532,3 +4532,121 @@ footer {
   margin-bottom: 10px;
 }
 
+/* --- Strict mobile navbar row + search behavior --- */
+@media (max-width: 768px) {
+    header {
+        height: 80px;
+        padding: 0 12px;
+    }
+
+    header .container {
+        display: flex;
+        flex-direction: row;    /* force row on mobile */
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;      /* keep everything on one line */
+        gap: 0.5rem;
+        position: relative;
+    }
+
+    .navbar-left {
+        flex: 0 0 auto;
+        order: 1;
+    }
+
+    .navbar-logo {
+        height: 52px;
+    }
+
+    /* Hide desktop nav links; use hamburger + mobile-menu */
+    header nav {
+        display: none;
+    }
+
+    /* [Logo] [🔍] [🛒] [☰] order */
+    .global-search-wrapper {
+        flex: 0 0 auto;
+        order: 2;
+    }
+
+    .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 0;
+        flex: 0 0 auto;
+        order: 3;
+    }
+
+    .cart-icon {
+        margin-left: 0;
+        font-size: 1.4rem;
+    }
+
+    .hamburger {
+        display: flex;
+        flex: 0 0 auto;
+        order: 4;
+        margin-left: 0.25rem;
+    }
+
+    /* Mobile dropdown under header (☰) */
+    .mobile-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1rem 1rem;
+        display: none;
+        flex-direction: column;
+        gap: 0.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        z-index: 5100;
+    }
+
+    .mobile-menu.active {
+        display: flex;
+    }
+
+    /* Search icon: compact pill in row by default (no visible input) */
+    .global-search-form {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+    }
+
+    .global-search-input {
+        width: 0;
+        opacity: 0;
+        padding: 0;
+    }
+
+    /* When mobile search is open, move bar below navbar */
+    html.mobile-search-open .global-search-wrapper .global-search-form {
+        position: fixed;
+        top: 80px;              /* just below header */
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
+        justify-content: flex-start;
+        padding: 0 0.75rem;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        background: #f3f4f6;
+        z-index: 5200;
+    }
+
+    html.mobile-search-open .global-search-wrapper .global-search-input {
+        width: 100%;
+        opacity: 1;
+        padding: 0.35rem 0.75rem 0.35rem 0.25rem;
+    }
+
+    html.mobile-search-open .global-search-wrapper .global-search-button {
+        width: 40px;
+        padding: 0;
+    }
+}
+
