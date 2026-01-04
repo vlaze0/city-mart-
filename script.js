@@ -538,6 +538,22 @@ async function loadOrders() {
             }
             right.appendChild(meta);
 
+            // For customers, show a Cancel button on pending / confirmed orders
+            if (mode === 'customer' && (status === 'pending' || status === 'confirmed')) {
+                const actions = document.createElement('div');
+                actions.className = 'order-actions';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'order-cancel-btn';
+                cancelBtn.textContent = 'Cancel order';
+                cancelBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    cancelCustomerOrder(order._id);
+                });
+                actions.appendChild(cancelBtn);
+                left.appendChild(actions);
+            }
+
             card.appendChild(left);
             card.appendChild(right);
 
@@ -546,6 +562,45 @@ async function loadOrders() {
     } catch (err) {
         console.error('Error loading orders:', err);
         ordersList.innerHTML = '<p style="padding:1rem; text-align:center; color:red;">Error loading orders.</p>';
+    }
+}
+
+// Allow customers to cancel their own orders from the My Orders modal
+async function cancelCustomerOrder(orderId) {
+    if (!orderId) return;
+    if (!authToken || !currentUser) {
+        showToast('Please login again to cancel your order.', 'error');
+        return;
+    }
+
+    const ok = window.confirm('Cancel this order?');
+    if (!ok) return;
+
+    try {
+        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // Use dedicated customer cancel route so it never goes through admin-only checks
+        const resp = await fetch(apiBase + '/api/customer/orders/' + orderId + '/cancel', {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + authToken,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await resp.json().catch(() => null);
+
+        if (!resp.ok) {
+            const msg = data && data.message ? data.message : 'Failed to cancel order.';
+            showToast(msg, 'error');
+            return;
+        }
+
+        showToast('Order cancelled successfully.', 'success');
+        // Reload list so status + button update
+        loadOrders();
+    } catch (err) {
+        console.error('Error cancelling customer order:', err);
+        showToast('Network error while cancelling order.', 'error');
     }
 }
 
@@ -1043,6 +1098,13 @@ function updateAuthUI() {
                         <span class="user-menu-item-desc">View your details and preferences</span>
                     </span>
                 </button>
+                <button type="button" class="user-menu-item" onclick="openOrdersFromMenu()">
+                    <span class="user-menu-item-icon">📦</span>
+                    <span class="user-menu-item-text">
+                        <span class="user-menu-item-label">My orders</span>
+                        <span class="user-menu-item-desc">Track things you've ordered</span>
+                    </span>
+                </button>
                 <button type="button" class="user-menu-item" onclick="openCartFromMenu()">
                     <span class="user-menu-item-icon">🛒</span>
                     <span class="user-menu-item-text">
@@ -1213,9 +1275,15 @@ function selectGender(gender) {
     }
 }
 
-// Function to handle checkout form submission
-function handleCheckoutFormSubmission(e) {
+// Function to handle checkout form submission + Razorpay payment
+async function handleCheckoutFormSubmission(e) {
     e.preventDefault();
+
+    // Guard: must have items in cart
+    if (!Array.isArray(cart) || cart.length === 0) {
+        showToast('Your cart is empty. Please add some items before placing an order.', 'error');
+        return;
+    }
 
     // Safely read form fields (some, like payment, may not exist on this page)
     const nameInput = document.getElementById('name');
@@ -1310,7 +1378,12 @@ function handleCheckoutFormSubmission(e) {
 
     const finalAmount = rawTotal - discount;
 
-    // Wallet payment handling
+    if (finalAmount <= 0) {
+        showToast('Order amount must be greater than zero to proceed with payment.', 'error');
+        return;
+    }
+
+    // Wallet payment handling (still applied before sending to Razorpay)
     if (paymentMethod === 'wallet') {
         let walletBalance = 0;
         let profile = {};
@@ -1340,56 +1413,146 @@ function handleCheckoutFormSubmission(e) {
         }
     }
 
-    // Build a bill-style message
+    // Build a bill-style message (for potential email/printing in future)
     const billMessage =
         `Order Summary\n` +
         `-------------------------\n` +
         `Items Total:  ₹${rawTotal.toFixed(2)}\n` +
         `Discount:     -₹${discount.toFixed(2)}\n` +
         `-------------------------\n` +
-        `Payable:       ${finalAmount.toFixed(2)}\\n\\n` +
-        `Name:   ${name}\\n` +
-        `Email/Phone:  ${email} / ${phone}\\n` +
-        `Address:${address}\\n` +
-        `Payment: ${paymentMethod} - ${paymentDetails}`;
+        `Payable:      ${finalAmount.toFixed(2)}\n\n` +
+        `Name:   ${name}\n` +
+        `Email/Phone:  ${email} / ${phone}\n` +
+        `Address:${address}\n` +
+        `Payment method: Razorpay (${paymentMethod})`;
 
-    // Notify user
-    showToast('Order placed successfully!', 'success');
-    alert(billMessage);
+    // --- Razorpay integration flow ---
 
-    // Persist order in backend if logged in
-    try {
-        if (currentUser && cart && cart.length) {
-            const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-            const orderPayload = {
-                userId: currentUser.id || currentUser._id,
-                products: cart.map(item => ({
-                    productId: item.id,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
-                totalAmount: finalAmount,
-            };
-            fetch(apiBase + '/api/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderPayload),
-            }).catch(err => console.warn('Failed to save order:', err));
-        }
-    } catch (e) {
-        console.warn('Error while sending order to backend:', e);
+    if (typeof Razorpay === 'undefined') {
+        console.error('Razorpay script not loaded');
+        showToast('Payment system is not ready. Please check your internet connection and try again.', 'error');
+        return;
     }
 
-    // Clear cart and close modal
-    cart = [];
-    saveCartToStorage();
-    updateCartCount();
-    updateCartDisplay();
-    closeCheckoutModal();
+    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
-    // After checkout, (preferences popup removed)
+    // Prepare products payload from cart for backend order creation
+    const productsPayload = cart.map(item => ({
+        productId: item.id || item._id || item.productId,
+        quantity: Number(item.quantity) || 1,
+        price: Number(item.price) || 0,
+    }));
+
+    const userId = currentUser && (currentUser.id || currentUser._id)
+        ? (currentUser.id || currentUser._id)
+        : null;
+
+    try {
+        // 1) Ask backend to create a Razorpay order
+        const createRes = await fetch(apiBase + '/api/payments/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: finalAmount }),
+        });
+
+        if (!createRes.ok) {
+            console.error('Failed to create Razorpay order', createRes.status);
+            showToast('Could not start payment. Please try again.', 'error');
+            return;
+        }
+
+        const { orderId, amount, currency, key } = await createRes.json();
+        if (!orderId || !amount || !key) {
+            console.error('Invalid create-order response');
+            showToast('Could not start payment. Please try again.', 'error');
+            return;
+        }
+
+        const options = {
+            key,
+            amount, // in paise
+            currency: currency || 'INR',
+            name: 'City Mart',
+            description: 'Order payment',
+            image: './images/logo.png',
+            order_id: orderId,
+            prefill: {
+                name,
+                email,
+                contact: phone,
+            },
+            notes: {
+                address,
+                paymentMethod,
+                paymentDetails,
+            },
+            theme: {
+                color: '#3399cc',
+            },
+            handler: async function (response) {
+                try {
+                    const verifyRes = await fetch(apiBase + '/api/payments/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            userId,
+                            products: productsPayload,
+                            amount: finalAmount,
+                        }),
+                    });
+
+                    if (!verifyRes.ok) {
+                        console.error('Payment verification failed', verifyRes.status);
+                        showToast('Payment verification failed. Please contact support if money is deducted.', 'error');
+                        return;
+                    }
+
+                    const verifyData = await verifyRes.json();
+                    if (!verifyData || !verifyData.success) {
+                        console.error('Payment verification error body:', verifyData);
+                        showToast('Payment verification failed. Please contact support if money is deducted.', 'error');
+                        return;
+                    }
+
+                    // Clear cart and redirect to success page
+                    try {
+                        localStorage.removeItem('citymart_cart');
+                    } catch (err) {
+                        console.warn('Could not clear cart from localStorage after payment', err);
+                    }
+                    cart = [];
+                    updateCartCount();
+                    updateCartDisplay();
+
+                    closeCheckoutModal();
+
+                    const orderIdFromDb = verifyData.orderId;
+                    const params = new URLSearchParams();
+                    if (orderIdFromDb) {
+                        params.set('orderId', orderIdFromDb);
+                    }
+                    window.location.href = 'payment-success.html' + (params.toString() ? `?${params.toString()}` : '');
+                } catch (err) {
+                    console.error('Error in Razorpay handler verification:', err);
+                    showToast('Something went wrong while finalizing your order. Please contact support.', 'error');
+                }
+            },
+            modal: {
+                ondismiss: function () {
+                    console.log('Razorpay popup closed by user');
+                },
+            },
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } catch (err) {
+        console.error('Unexpected error during payment flow:', err);
+        showToast('Could not start payment due to a technical error. Please try again.', 'error');
+    }
 }
 
 // Initialize payment method UI in checkout modal
@@ -1705,8 +1868,189 @@ function handleCustomerProfileFormSubmit(e) {
     if (preferencesSummary && prefInput) preferencesSummary.textContent = prefInput.value.trim() || '-';
     if (loyaltySummary && loyaltyInput) loyaltySummary.textContent = loyaltyInput.value || '-';
     if (paymentSummary && payMethodInput) paymentSummary.textContent = payMethodInput.value || '-';
+}
 
-    showToast('Profile saved successfully.', 'success');
+// Customer dashboard page (profile.html) – show real logged-in user + real orders
+async function initCustomerDashboardPage() {
+    // Only run on the dashboard layout page
+    if (!document.body || !document.body.classList.contains('customer-dashboard-page')) return;
+
+    // Ensure we have the latest currentUser from localStorage if needed
+    if (!currentUser) {
+        try {
+            const storedUser = localStorage.getItem('citymart_user');
+            if (storedUser) currentUser = JSON.parse(storedUser);
+        } catch (e) {
+            console.warn('Could not read citymart_user for dashboard', e);
+        }
+    }
+
+    const nameHeading = document.getElementById('cd-name');
+    const nameMain = document.getElementById('cd-name-main');
+    const emailEl = document.getElementById('cd-email');
+    const phoneEl = document.getElementById('cd-phone');
+    const addrEl = document.getElementById('cd-address');
+    const lastTxnEl = document.getElementById('cd-last-transaction');
+
+    const totalSpentEl = document.getElementById('cd-total-spent');
+    const totalOrdersEl = document.getElementById('cd-total-orders');
+    const completeOrdersEl = document.getElementById('cd-complete-orders');
+    const pendingOrdersEl = document.getElementById('cd-pending-orders');
+
+    const tbody = document.getElementById('cd-orders-tbody');
+    const statusFilter = document.getElementById('cd-order-filter-status');
+    const searchInput = document.getElementById('cd-order-search');
+
+    // Basic customer identity from currentUser
+    if (currentUser) {
+        const name = currentUser.username || 'Customer';
+        if (nameHeading) nameHeading.textContent = name;
+        if (nameMain) nameMain.textContent = name;
+        if (emailEl) emailEl.textContent = currentUser.email || '-';
+        if (phoneEl) phoneEl.textContent = currentUser.phone || '-';
+    }
+
+    // Load saved shipping address (from profile preferences) if available
+    try {
+        const storedProfile = localStorage.getItem('citymart_profile');
+        if (storedProfile) {
+            const profile = JSON.parse(storedProfile);
+            if (addrEl && profile.shippingAddress) addrEl.textContent = profile.shippingAddress;
+        }
+    } catch (e) {
+        console.warn('Could not read profile for dashboard address', e);
+    }
+
+    if (!tbody) return;
+
+    if (!currentUser || currentUser.role !== 'customer') {
+        tbody.innerHTML = '<tr><td colspan="6">Please login as a customer to view your orders.</td></tr>';
+        if (totalSpentEl) totalSpentEl.textContent = '₹0';
+        if (totalOrdersEl) totalOrdersEl.textContent = '0';
+        if (completeOrdersEl) completeOrdersEl.textContent = '0';
+        if (pendingOrdersEl) pendingOrdersEl.textContent = '0';
+        return;
+    }
+
+    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+    const url = apiBase + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
+
+    const headers = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+    let allOrders = [];
+    try {
+        const resp = await fetch(url, { headers });
+        if (!resp.ok) {
+            console.error('Failed to load orders for dashboard', resp.status);
+            tbody.innerHTML = '<tr><td colspan="6">Could not load your orders right now.</td></tr>';
+            return;
+        }
+        const data = await resp.json();
+        allOrders = Array.isArray(data) ? data : [];
+    } catch (err) {
+        console.error('Error loading orders for dashboard', err);
+        tbody.innerHTML = '<tr><td colspan="6">Error loading your orders.</td></tr>';
+        return;
+    }
+
+    if (!allOrders.length) {
+        tbody.innerHTML = '<tr><td colspan="6">No orders found for this account yet.</td></tr>';
+        if (totalSpentEl) totalSpentEl.textContent = '₹0';
+        if (totalOrdersEl) totalOrdersEl.textContent = '0';
+        if (completeOrdersEl) completeOrdersEl.textContent = '0';
+        if (pendingOrdersEl) pendingOrdersEl.textContent = '0';
+        return;
+    }
+
+    // Compute basic metrics
+    const normalizeStatus = (raw) => {
+        const s = (raw || '').toLowerCase();
+        if (s === 'confirmed' || s === 'completed') return 'Completed';
+        if (s === 'pending' || s === 'processing') return 'Pending';
+        if (s === 'cancelled' || s === 'canceled') return 'Cancelled';
+        return raw || 'Pending';
+    };
+
+    const totalSpent = allOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+    const completedCount = allOrders.filter(o => normalizeStatus(o.status) === 'Completed').length;
+    const pendingCount = allOrders.filter(o => normalizeStatus(o.status) === 'Pending').length;
+
+    if (totalSpentEl) totalSpentEl.textContent = '₹' + totalSpent.toLocaleString('en-IN');
+    if (totalOrdersEl) totalOrdersEl.textContent = String(allOrders.length);
+    if (completeOrdersEl) completeOrdersEl.textContent = String(completedCount);
+    if (pendingOrdersEl) pendingOrdersEl.textContent = String(pendingCount);
+
+    // Last transaction date
+    const sortedByDate = [...allOrders].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const mostRecent = sortedByDate[0];
+    if (mostRecent && lastTxnEl) {
+        const dt = mostRecent.createdAt ? new Date(mostRecent.createdAt) : null;
+        lastTxnEl.textContent = dt ? dt.toLocaleDateString() : '-';
+    }
+
+    function buildTableRows() {
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const statusVal = statusFilter ? statusFilter.value : 'all';
+        const query = (searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
+
+        let rows = allOrders.slice();
+
+        if (statusVal && statusVal !== 'all') {
+            rows = rows.filter(o => {
+                return (o.status || '').toLowerCase() === statusVal.toLowerCase() ||
+                       normalizeStatus(o.status).toLowerCase() === statusVal.toLowerCase();
+            });
+        }
+
+        rows = rows.filter(o => {
+            if (!query) return true;
+            const idStr = (o._id || '').toString().toLowerCase();
+            const firstProd = (o.products && o.products[0] && o.products[0].productId && o.products[0].productId.name) || '';
+            return idStr.includes(query) || firstProd.toLowerCase().includes(query);
+        });
+
+        if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="6">No orders match the selected filters.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        rows.forEach(o => {
+            const created = o.createdAt ? new Date(o.createdAt) : null;
+            const dateStr = created ? created.toLocaleDateString() : '-';
+            const orderId = o._id || '';
+
+            const products = Array.isArray(o.products) ? o.products : [];
+            const firstProd = (products[0] && products[0].productId && products[0].productId.name) || 'Items';
+            const itemCount = products.reduce((sum, p) => sum + Number(p.quantity || 0), 0);
+            const productLabel = itemCount > 1 ? `${firstProd} (+${itemCount - 1} more)` : firstProd;
+
+            const priceStr = '₹' + Number(o.totalAmount || 0).toLocaleString('en-IN');
+            const payMethod = o.paymentMethod || 'Online';
+            const uiStatus = normalizeStatus(o.status);
+            const pillClass = uiStatus === 'Completed' ? 'status-active' : 'status-muted';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${orderId}</td>
+                <td>${productLabel}</td>
+                <td>${priceStr}</td>
+                <td>${payMethod}</td>
+                <td><span class="status-pill ${pillClass}">${uiStatus}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    if (statusFilter) statusFilter.addEventListener('change', buildTableRows);
+    if (searchInput) searchInput.addEventListener('input', buildTableRows);
+
+    buildTableRows();
 }
 
 function handleUseCurrentLocationClick() {
@@ -1789,6 +2133,11 @@ function closeUserMenuDropdown() {
 function openCartFromMenu() {
     closeUserMenuDropdown();
     showCartModal();
+}
+
+function openOrdersFromMenu() {
+    closeUserMenuDropdown();
+    showOrdersModal();
 }
 
 function goToCustomerProfilePage() {
@@ -2010,8 +2359,9 @@ document.addEventListener('DOMContentLoaded', function() {
         profileForm.addEventListener('submit', handleProfileFormSubmit);
     }
 
-    // If we are on the dedicated profile page, initialize it
+    // If we are on the dedicated profile pages, initialize them
     initCustomerProfilePage();
+    initCustomerDashboardPage();
 
     // Orders filters: reload orders list when filters change (if modal is open)
     const statusFilter = document.getElementById('orders-status-filter');

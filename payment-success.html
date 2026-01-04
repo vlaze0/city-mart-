@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - City Mart</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+</head>
+<body class="payment-success-page">
+    <header>
+        <div class="container">
+            <div class="navbar-left">
+                <a href="index.html" class="navbar-logo-link">
+                    <img src="./images/logo.png" alt="CityMart" class="navbar-logo">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="static-page">
+        <div class="container">
+            <h1>Thank you! Your payment was successful.</h1>
+            <p id="payment-success-text">We are confirming your order details...</p>
+            <p>
+                You can view your order any time from the <strong>My Orders</strong> section after logging in.
+            </p>
+            <button class="checkout-primary-btn" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 City Mart. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Read orderId from query string (if present) and show it
+        (function () {
+            const el = document.getElementById('payment-success-text');
+            if (!el) return;
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('orderId');
+            if (orderId) {
+                el.textContent = `Your order has been confirmed. Order ID: ${orderId}`;
+            } else {
+                el.textContent = 'Your order has been confirmed.';
+            }
+        })();
+    </script>
+</body>
+</html>

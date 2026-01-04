@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
+const Razorpay = require('razorpay');
 const { authenticateToken, requireAdmin, requireVendor, requireCustomer, requireAdminOrVendor } = require('./middleware');
 require('dotenv').config();
 
@@ -36,6 +38,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
+
+// Razorpay client (credentials are read from environment variables)
+const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 // Product Schema
 const productSchema = new mongoose.Schema({
@@ -725,6 +733,94 @@ app.delete('/api/admin/reviews/:id', authenticateToken, requireAdmin, async (req
   }
 });
 
+// ---- Payments: Razorpay integration ----
+
+// Create a Razorpay order for the payable amount (in INR)
+app.post('/api/payments/create-order', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const numericAmount = Number(amount);
+    if (!numericAmount || numericAmount <= 0) {
+      return res.status(400).json({ message: 'Valid amount is required to create order' });
+    }
+
+    const options = {
+      amount: Math.round(numericAmount * 100), // amount in paise
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}`,
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    return res.json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    return res.status(500).json({ message: 'Failed to create payment order' });
+  }
+});
+
+// Verify Razorpay payment signature and create confirmed Order in MongoDB
+app.post('/api/payments/verify', async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      userId,
+      products,
+      amount,
+    } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid payment details' });
+    }
+
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Payment signature verification failed' });
+    }
+
+    // Create confirmed order in MongoDB
+    const safeProducts = Array.isArray(products)
+      ? products.map(p => ({
+          productId: p.productId,
+          quantity: Number(p.quantity) || 1,
+          price: Number(p.price) || 0,
+        }))
+      : [];
+
+    const numericAmount = Number(amount) || 0;
+
+    const order = new Order({
+      userId: userId || undefined,
+      products: safeProducts,
+      totalAmount: numericAmount,
+      status: 'confirmed',
+    });
+
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: 'Payment verified and order created successfully',
+      orderId: order._id,
+    });
+  } catch (error) {
+    console.error('Error verifying Razorpay payment:', error);
+    return res.status(500).json({ message: 'Failed to verify payment' });
+  }
+});
+
 app.put('/api/orders/:id/confirm', authenticateToken, requireAdmin, async (req, res) => {
   try {
     console.log('Confirming order:', req.params.id);
@@ -774,16 +870,67 @@ app.put('/api/vendor/orders/:id/confirm', authenticateToken, requireVendor, asyn
   }
 });
 
-// Allow admin to cancel an order
+// Allow admin to cancel an order (used by admin dashboard)
 app.put('/api/orders/:id/cancel', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    console.log('Cancelling order:', req.params.id);
+    console.log('Admin cancelling order:', req.params.id, 'by user', req.user.userId);
     const order = await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' }, { new: true });
-    console.log('Updated order (cancelled):', order);
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json(order);
   } catch (error) {
     console.log('Error cancelling order:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Customers: cancel their own order (separate path so it never hits admin-only middleware)
+app.put('/api/customer/orders/:id/cancel', authenticateToken, requireCustomer, async (req, res) => {
+  try {
+    console.log('Customer cancelling order:', req.params.id, 'by user', req.user.userId);
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (String(order.userId) !== String(req.user.userId)) {
+      return res.status(403).json({ message: 'You can only cancel your own orders.' });
+    }
+
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ message: 'Order is already cancelled.' });
+    }
+
+    order.status = 'cancelled';
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    console.error('Error cancelling customer order:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Customers: cancel their own order
+app.put('/api/my-orders/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (String(order.userId) !== String(req.user.userId)) {
+      return res.status(403).json({ message: 'You can only cancel your own orders.' });
+    }
+
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ message: 'Order is already cancelled.' });
+    }
+
+    // For now allow cancelling pending or confirmed orders
+    order.status = 'cancelled';
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    console.error('Error cancelling customer order:', error);
     res.status(500).json({ message: error.message });
   }
 });

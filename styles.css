@@ -23,6 +23,13 @@ body {
     overflow-x: hidden; /* prevent horizontal scroll on small screens */
 }
 
+/* Generic static content pages (policies, payment success, etc.)
+   Need top offset because the header is fixed at 90px height. */
+.static-page {
+    margin-top: 110px;              /* clear the fixed header */
+    padding: 2rem 0 3rem;           /* comfortable vertical spacing */
+}
+
 /* Make images & videos shrink nicely on smaller screens */
 img,
 video {
@@ -803,7 +810,8 @@ nav ul li a:hover {
 
 /* --- Customer dashboard layout --- */
 .customer-dashboard-page {
-    background: #f5f6fa;
+    /* Match the same soft background used on the main site body */
+    background: var(--cm-light);
 }
 
 .customer-dashboard-layout {
@@ -3871,6 +3879,26 @@ footer {
 .order-total {
     font-weight: 600;
     margin-top: 0.15rem;
+}
+
+.order-actions {
+    margin-top: 0.4rem;
+}
+
+.order-cancel-btn {
+    padding: 0.25rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #fecaca;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.order-cancel-btn:hover {
+    background: #fecaca;
+    border-color: #fca5a5;
 }
 
 .order-products {
