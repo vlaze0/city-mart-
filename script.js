@@ -1389,12 +1389,7 @@ function handleCheckoutFormSubmission(e) {
     updateCartDisplay();
     closeCheckoutModal();
 
-    // After checkout, gently ask for preferences (progressive profiling)
-    setTimeout(() => {
-        if (document.getElementById('profile-modal')) {
-            openProfileModal();
-        }
-    }, 400);
+    // After checkout, (preferences popup removed)
 }
 
 // Initialize payment method UI in checkout modal

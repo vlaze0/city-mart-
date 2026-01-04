@@ -20,6 +20,14 @@ body {
     background: var(--cm-light);
     min-height: 100vh;
     letter-spacing: 0.5px;
+    overflow-x: hidden; /* prevent horizontal scroll on small screens */
+}
+
+/* Make images & videos shrink nicely on smaller screens */
+img,
+video {
+    max-width: 100%;
+    height: auto;
 }
 
 /* Toast notifications */
@@ -378,10 +386,12 @@ nav ul li a:hover {
 @media (max-width: 768px) {
     header {
         padding: 0.5rem 0;
+        height: auto;              /* allow header to grow when items wrap */
     }
 
     header .container {
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .navbar-left h1 {
@@ -421,6 +431,17 @@ nav ul li a:hover {
     background: var(--cm-dark);
     color: var(--cm-accent);
     overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        margin-top: 80px;      /* match slightly smaller mobile header */
+        padding: 3.5rem 0 2.5rem;
+    }
+
+    .hero-image {
+        height: 260px;        /* reduce fixed height so it fits on small phones */
+    }
 }
 
 .hero-container {
@@ -4444,6 +4465,19 @@ footer {
 }
 
 /* Responsive admin tweaks */
+@media (max-width: 900px) {
+    .admin-layout {
+        grid-template-columns: 1fr;      /* stack sidebar above main */
+    }
+
+    .admin-sidebar {
+        position: static;               /* avoid tall fixed column on mobile */
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e1e4eb;
+    }
+}
+
 @media (max-width: 768px) {
     .admin-filters-row {
         flex-direction: column;
