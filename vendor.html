@@ -460,6 +460,10 @@
                 const total = Number(order.totalAmount || 0).toFixed(2);
                 const status = order.status || 'pending';
 
+                const actionHtml = status === 'pending'
+                    ? `<button type="button" class="vlo-confirm-btn" onclick="confirmVendorOrder('${order._id}')">Confirm</button>`
+                    : '';
+
                 li.innerHTML = `
                     <div class="vlo-main">
                         <div class="vlo-avatar"></div>
@@ -471,11 +475,57 @@
                     <div class="vlo-right">
                         <p class="vlo-amount">₹${total}</p>
                         <span class="vlo-status vlo-status-${status}">${status}</span>
+                        ${actionHtml}
                     </div>
                 `;
 
                 listEl.appendChild(li);
             });
+        }
+
+        async function confirmVendorOrder(orderId) {
+            if (!orderId) return;
+            if (!confirm('Confirm this order for your products?')) return;
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/vendor/orders/' + orderId + '/confirm', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to confirm order.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast('Order confirmed successfully.', 'success');
+                }
+
+                // Refresh the last orders list after confirmation
+                if (window.currentUser) {
+                    const vid = window.currentUser.id || window.currentUser._id;
+                    if (vid) {
+                        loadVendorLastOrders(vid);
+                    }
+                }
+            } catch (err) {
+                console.error('Error confirming vendor order:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while confirming order.', 'error');
+                }
+            }
         }
 
         async function loadVendorLastOrders(vendorId) {

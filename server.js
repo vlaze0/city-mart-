@@ -738,6 +738,42 @@ app.put('/api/orders/:id/confirm', authenticateToken, requireAdmin, async (req, 
   }
 });
 
+// Vendor: confirm an order that contains only this vendor's products
+app.put('/api/vendor/orders/:id/confirm', authenticateToken, requireVendor, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('products.productId');
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const currentVendorId = String(req.user.userId);
+    const vendorIdsInOrder = new Set();
+
+    for (const item of order.products || []) {
+      const prod = item.productId;
+      if (prod && prod.vendorId) {
+        vendorIdsInOrder.add(String(prod.vendorId));
+      }
+    }
+
+    if (!vendorIdsInOrder.size) {
+      return res.status(400).json({ message: 'This order does not contain any vendor-owned products.' });
+    }
+
+    // For now, allow a vendor to confirm the order only if all items belong to them.
+    if (vendorIdsInOrder.size > 1 || !vendorIdsInOrder.has(currentVendorId)) {
+      return res.status(403).json({ message: 'You can only confirm orders that contain only your own products.' });
+    }
+
+    order.status = 'confirmed';
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    console.log('Error confirming vendor order:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Allow admin to cancel an order
 app.put('/api/orders/:id/cancel', authenticateToken, requireAdmin, async (req, res) => {
   try {
