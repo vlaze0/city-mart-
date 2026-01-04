@@ -1949,6 +1949,12 @@ function handleGlobalSearchSubmit(event) {
 
 // Initialize cart count, auth state, and checkout form listener on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure trolley/cart overlay starts hidden on every page load
+    const trolleyModal = document.getElementById('vendors-cart-modal');
+    if (trolleyModal) {
+        trolleyModal.style.display = 'none';
+    }
+
     // Close user dropdown when clicking outside
     document.addEventListener('click', function (e) {
         const dropdown = document.getElementById('user-menu-dropdown');
