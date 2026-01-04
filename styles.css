@@ -4583,8 +4583,8 @@ footer {
         font-size: 1.4rem;
     }
 
-    .hamburger {
-        display: flex;
+    header .hamburger {
+        display: flex !important;  /* force visible on real mobile devices */
         flex: 0 0 auto;
         order: 4;
         margin-left: 0.25rem;
