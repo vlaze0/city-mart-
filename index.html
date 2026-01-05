@@ -27,7 +27,7 @@
                     <ul>
                         <li><a href="index.html#home">Home</a></li>
                         <li><a href="#" onclick="showVendorsModal()">Product</a></li>
-                        <li><a href="profile.html">Profile</a></li>
+                        <li><a href="#" onclick="handleProfileNavClick(event)">Profile</a></li>
                         <li><a href="index.html#contact">Contact</a></li>
                         <li class="user-menu">
                             <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
@@ -52,7 +52,7 @@
             <div class="mobile-menu">
                 <a href="index.html#home">Home</a>
                 <a href="#" onclick="showVendorsModal()">Product</a>
-                <a href="profile.html">Profile</a>
+                <a href="#" onclick="handleProfileNavClick(event)">Profile</a>
                 <a href="index.html#contact">Contact</a>
                 <a href="#" onclick="showLoginOptions()">Login</a>
             </div>
@@ -381,55 +381,18 @@
                         <!-- One row per cart item -->
                         <div id="checkout-items-list" class="checkout-items-list"></div>
 
-                        <!-- Payment methods -->
+                        <!-- Payment options: Pay now (online via Razorpay) or Cash on Delivery -->
                         <div class="checkout-payment-section">
-                            <h4>How you'll pay</h4>
+                            <h4>Payment options</h4>
                             <div class="checkout-payment-options">
                                 <label class="payment-option">
-                                    <input type="radio" name="payment-method" value="card" checked>
-                                    <span class="payment-option-label">Card</span>
-                                    <span class="payment-option-icons">💳</span>
-                                </label>
-                                <label class="payment-option">
-                                    <input type="radio" name="payment-method" value="upi">
-                                    <span class="payment-option-label">UPI</span>
-                                    <span class="payment-option-icons">📱</span>
+                                    <input type="radio" name="payment-method" value="online" checked>
+                                    <span class="payment-option-label">Pay now (Online)</span>
                                 </label>
                                 <label class="payment-option">
                                     <input type="radio" name="payment-method" value="cod">
                                     <span class="payment-option-label">Cash on Delivery</span>
                                 </label>
-                            </div>
-
-                            <!-- Card details -->
-                            <div class="payment-details" id="payment-details-card">
-                                <div class="payment-field-row">
-                                    <label for="card-number">Card number</label>
-                                    <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
-                                </div>
-                                <div class="payment-field-row payment-field-row-inline">
-                                    <div>
-                                        <label for="card-name">Name on card</label>
-                                        <input type="text" id="card-name" placeholder="Full name">
-                                    </div>
-                                    <div>
-                                        <label for="card-expiry">Expiry</label>
-                                        <input type="text" id="card-expiry" placeholder="MM/YY">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- UPI details -->
-                            <div class="payment-details" id="payment-details-upi" style="display:none;">
-                                <div class="payment-field-row">
-                                    <label for="upi-id">UPI ID</label>
-                                    <input type="text" id="upi-id" placeholder="name@bank">
-                                </div>
-                            </div>
-
-                            <!-- COD info -->
-                            <div class="payment-details" id="payment-details-cod" style="display:none;">
-                                <p class="payment-cod-note">You will pay in cash to the delivery partner when your order arrives.</p>
                             </div>
                         </div>
 

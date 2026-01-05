@@ -1285,6 +1285,17 @@ async function handleCheckoutFormSubmission(e) {
         return;
     }
 
+    // Guard: customer must be logged in to place an order
+    if (!currentUser || currentUser.role !== 'customer') {
+        showToast('Please login as a customer before placing an order.', 'error');
+        if (typeof startLoginAs === 'function') {
+            startLoginAs('customer');
+        } else {
+            openLoginOptionsModal();
+        }
+        return;
+    }
+
     // Safely read form fields (some, like payment, may not exist on this page)
     const nameInput = document.getElementById('name');
     const emailInput = document.getElementById('email');
@@ -1302,46 +1313,23 @@ async function handleCheckoutFormSubmission(e) {
         return;
     }
 
-    // Determine selected payment method
+    // Determine selected payment method (online via Razorpay or Cash on Delivery)
     const selectedRadio = document.querySelector('input[name="payment-method"]:checked');
     const paymentMethodSelect = document.getElementById('payment-method'); // legacy fallback if present
     let paymentMethod = '';
     let paymentDetails = '';
 
     if (selectedRadio) {
-        paymentMethod = selectedRadio.value;
+        paymentMethod = selectedRadio.value; // 'online' or 'cod'
     } else if (paymentMethodSelect) {
         paymentMethod = paymentMethodSelect.value;
     }
 
-    // Collect payment details based on method
-    if (paymentMethod === 'card') {
-        const cardNumberInput = document.getElementById('card-number');
-        const cardNameInput = document.getElementById('card-name');
-        const cardExpiryInput = document.getElementById('card-expiry');
-        const cardNumber = cardNumberInput ? cardNumberInput.value.replace(/\s+/g, '') : '';
-        const cardName = cardNameInput ? cardNameInput.value.trim() : '';
-        const cardExpiry = cardExpiryInput ? cardExpiryInput.value.trim() : '';
-
-        if (!cardNumber || !cardName || !cardExpiry) {
-            showToast('Please fill in all card details.', 'error');
-            return;
-        }
-        const last4 = cardNumber.slice(-4);
-        paymentDetails = `Card ****${last4} (exp ${cardExpiry})`;
-    } else if (paymentMethod === 'upi') {
-        const upiInput = document.getElementById('upi-id');
-        const upiId = upiInput ? upiInput.value.trim() : '';
-        if (!upiId) {
-            showToast('Please enter your UPI ID.', 'error');
-            return;
-        }
-        paymentDetails = `UPI ${upiId}`;
-    } else if (paymentMethod === 'cod') {
+    if (paymentMethod === 'cod') {
         paymentDetails = 'Cash on Delivery';
-    } else if (!paymentMethod) {
-        // No explicit method selected; treat as unspecified but allow order to go through
-        paymentMethod = 'unspecified';
+    } else if (!paymentMethod || paymentMethod === 'online') {
+        // Default to online payment (Razorpay) when nothing is selected explicitly
+        paymentMethod = 'online';
         paymentDetails = '';
     }
 
@@ -1424,15 +1412,7 @@ async function handleCheckoutFormSubmission(e) {
         `Name:   ${name}\n` +
         `Email/Phone:  ${email} / ${phone}\n` +
         `Address:${address}\n` +
-        `Payment method: Razorpay (${paymentMethod})`;
-
-    // --- Razorpay integration flow ---
-
-    if (typeof Razorpay === 'undefined') {
-        console.error('Razorpay script not loaded');
-        showToast('Payment system is not ready. Please check your internet connection and try again.', 'error');
-        return;
-    }
+        `Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online (Razorpay)'}`;
 
     const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
@@ -1446,6 +1426,58 @@ async function handleCheckoutFormSubmission(e) {
     const userId = currentUser && (currentUser.id || currentUser._id)
         ? (currentUser.id || currentUser._id)
         : null;
+
+    // If Cash on Delivery, skip Razorpay and create an order directly in MongoDB
+    if (paymentMethod === 'cod') {
+        try {
+            const resp = await fetch(apiBase + '/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    products: productsPayload,
+                    totalAmount: finalAmount,
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+            if (!resp.ok) {
+                const msg = data && data.message ? data.message : 'Failed to place order.';
+                showToast(msg, 'error');
+                return;
+            }
+
+            // Clear cart and redirect to success page
+            try {
+                localStorage.removeItem('citymart_cart');
+            } catch (err) {
+                console.warn('Could not clear cart from localStorage after COD order', err);
+            }
+            cart = [];
+            updateCartCount();
+            updateCartDisplay();
+            closeCheckoutModal();
+
+            const params = new URLSearchParams();
+            if (data && data._id) {
+                params.set('orderId', data._id);
+            }
+            window.location.href = 'payment-success.html' + (params.toString() ? `?${params.toString()}` : '');
+            return;
+        } catch (err) {
+            console.error('Error creating COD order:', err);
+            showToast('Could not place order. Please try again.', 'error');
+            return;
+        }
+    }
+
+    // --- Razorpay integration flow for online payments ---
+
+    if (typeof Razorpay === 'undefined') {
+        console.error('Razorpay script not loaded');
+        showToast('Payment system is not ready. Please check your internet connection and try again.', 'error');
+        return;
+    }
 
     try {
         // 1) Ask backend to create a Razorpay order
@@ -1901,14 +1933,38 @@ async function initCustomerDashboardPage() {
     const statusFilter = document.getElementById('cd-order-filter-status');
     const searchInput = document.getElementById('cd-order-search');
 
-    // Basic customer identity from currentUser
-    if (currentUser) {
-        const name = currentUser.username || 'Customer';
-        if (nameHeading) nameHeading.textContent = name;
-        if (nameMain) nameMain.textContent = name;
-        if (emailEl) emailEl.textContent = currentUser.email || '-';
-        if (phoneEl) phoneEl.textContent = currentUser.phone || '-';
+    // If not logged in as a customer, do not show any saved profile; ask to login instead
+    if (!currentUser || currentUser.role !== 'customer') {
+        if (nameHeading) nameHeading.textContent = 'Please login';
+        if (nameMain) nameMain.textContent = 'Please login';
+        if (emailEl) emailEl.textContent = '-';
+        if (phoneEl) phoneEl.textContent = '-';
+        if (addrEl) addrEl.textContent = '-';
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6">Please login as a customer to view your profile and orders.</td></tr>';
+        }
+        if (totalSpentEl) totalSpentEl.textContent = '₹0';
+        if (totalOrdersEl) totalOrdersEl.textContent = '0';
+        if (completeOrdersEl) completeOrdersEl.textContent = '0';
+        if (pendingOrdersEl) pendingOrdersEl.textContent = '0';
+
+        if (typeof showToast === 'function') {
+            showToast('Please login as a customer to view your profile.', 'error');
+        }
+        if (typeof startLoginAs === 'function') {
+            startLoginAs('customer');
+        } else if (typeof openLoginOptionsModal === 'function') {
+            openLoginOptionsModal();
+        }
+        return;
     }
+
+    // Basic customer identity from currentUser
+    const name = currentUser.username || 'Customer';
+    if (nameHeading) nameHeading.textContent = name;
+    if (nameMain) nameMain.textContent = name;
+    if (emailEl) emailEl.textContent = currentUser.email || '-';
+    if (phoneEl) phoneEl.textContent = currentUser.phone || '-';
 
     // Load saved shipping address (from profile preferences) if available
     try {
@@ -1922,15 +1978,6 @@ async function initCustomerDashboardPage() {
     }
 
     if (!tbody) return;
-
-    if (!currentUser || currentUser.role !== 'customer') {
-        tbody.innerHTML = '<tr><td colspan="6">Please login as a customer to view your orders.</td></tr>';
-        if (totalSpentEl) totalSpentEl.textContent = '₹0';
-        if (totalOrdersEl) totalOrdersEl.textContent = '0';
-        if (completeOrdersEl) completeOrdersEl.textContent = '0';
-        if (pendingOrdersEl) pendingOrdersEl.textContent = '0';
-        return;
-    }
 
     const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
     const url = apiBase + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
@@ -2143,6 +2190,37 @@ function openOrdersFromMenu() {
 function goToCustomerProfilePage() {
     // Navigate to dedicated profile page for customers
     window.location.href = 'profile.html';
+}
+
+// Handle clicks on the "Profile" item in the main navigation bar
+function handleProfileNavClick(event) {
+    if (event) event.preventDefault();
+
+    // No user logged in: ask them to login as a customer
+    if (!currentUser) {
+        if (typeof showToast === 'function') {
+            showToast('Please login to view your profile.', 'error');
+        }
+        if (typeof startLoginAs === 'function') {
+            startLoginAs('customer');
+        } else if (typeof openLoginOptionsModal === 'function') {
+            openLoginOptionsModal();
+        }
+        return;
+    }
+
+    // Route based on role
+    if (currentUser.role === 'customer') {
+        window.location.href = 'profile.html';
+    } else if (currentUser.role === 'vendor') {
+        window.location.href = 'vendor.html';
+    } else if (currentUser.role === 'admin') {
+        window.location.href = 'admin.html';
+    } else {
+        if (typeof showToast === 'function') {
+            showToast('This profile page is only for customers.', 'error');
+        }
+    }
 }
 
 async function openVendorProfileModal() {
@@ -2593,266 +2671,6 @@ async function handleSignupFlow(email, password, statusEl) {
     }
 
     closeAuthModal();
-}
-// Script loaded
-console.log('Script loaded');
-
-// Function to add item to cart
-function addToCart(id, name, price, category = null, image = null, options = {}) {
-    const { gender = null, size = null, skipGenderModal = false } = options || {};
-
-    // Check if it's a pet product (gender selection flow)
-    if (!skipGenderModal && category && category.toLowerCase().includes('pet') && !gender) {
-        pendingProduct = { id, name, price, category, image };
-        showGenderModal();
-        return;
-    }
-
-    const existingItem = cart.find(item => item.id === id && item.gender === gender && item.size === size);
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({ id, name, price, quantity: 1, image, gender, size });
-    }
-    saveCartToStorage();
-    updateCartCount();
-    updateCartDisplay();
-    showToast(`${name} added to cart`, 'success');
-}
-
-// Cart array to store items
-let cart = [];
-let pendingProduct = null;
-let toastContainer = null;
-// Simple wallet balance stored in localStorage profile (citymart_profile.walletBalance)
-
-function saveCartToStorage() {
-    try {
-        localStorage.setItem('citymart_cart', JSON.stringify(cart));
-    } catch (e) {
-        console.warn('Could not persist cart to localStorage', e);
-    }
-}
-
-// Simple auth state
-let currentUser = null;
-let authToken = null;
-let loginContext = null; // 'customer' or 'vendor'
-let authMode = 'login'; // 'login' or 'signup'
-// Track whether vendor is editing an existing product
-let editingProductId = null;
-
-// Function to update cart count
-function updateCartCount() {
-    const cartCount = document.getElementById('cart-count');
-    if (cartCount) {
-        cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
-    }
-}
-
-// Function to show vendors modal
-function showVendorsModal() {
-    console.log('Enter Mart button clicked');
-    const modal = document.getElementById('vendors-modal');
-    const trolleyModal = document.getElementById('vendors-cart-modal');
-    if (modal) {
-        modal.style.display = 'block';
-        modal.style.zIndex = '9999'; // Ensure it's on top
-        console.log('Vendors modal displayed');
-    } else {
-        console.error('Vendors modal not found');
-    }
-    // Open the independent trolley modal alongside the vendors modal
-    if (trolleyModal) {
-        trolleyModal.style.display = 'block';
-    }
-}
-
-// Function to close vendors modal
-function closeVendorsModal() {
-    const modal = document.getElementById('vendors-modal');
-    const trolleyModal = document.getElementById('vendors-cart-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    // Close the trolley modal as well so they always stay in sync
-    if (trolleyModal) {
-        trolleyModal.style.display = 'none';
-    }
-}
-
-// Function to show cart modal
-function showCartModal() {
-    const modal = document.getElementById('cart-modal');
-    if (modal) {
-        updateCartDisplay();
-        modal.style.display = 'block';
-    }
-}
-
-// Function to close cart modal
-function closeCartModal() {
-    const modal = document.getElementById('cart-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Function to update cart display
-function updateCartDisplay() {
-    const cartItems = document.getElementById('cart-items');
-    const cartTotal = document.getElementById('cart-total');
-    if (!cartItems || !cartTotal) return;
-
-    cartItems.innerHTML = '';
-
-    if (cart.length === 0) {
-        const emptyMessage = document.createElement('p');
-        emptyMessage.textContent = 'Your cart is empty. Start adding some products!';
-        emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.color = '#7f8c8d';
-        cartItems.appendChild(emptyMessage);
-        cartTotal.textContent = '0.00';
-        return;
-    }
-
-    let total = 0;
-    let mrpTotal = 0;
-
-    cart.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'cart-item';
-
-        const leftSection = document.createElement('div');
-        leftSection.className = 'cart-item-left';
-
-        if (item.image) {
-            const img = document.createElement('img');
-            img.src = item.image;
-            img.alt = item.name;
-            img.onerror = function () {
-                this.src = './images/placeholder.jpg';
-            };
-            leftSection.appendChild(img);
-        }
-
-        const details = document.createElement('div');
-        details.className = 'cart-item-details';
-
-        const title = document.createElement('h4');
-        title.textContent = item.gender ? `${item.name} (${item.gender})` : item.name;
-        details.appendChild(title);
-
-        const priceLine = document.createElement('p');
-        const mrp = (item.price * 1.1).toFixed(2);
-        priceLine.innerHTML = `MRP: <span style="text-decoration: line-through; color: #888;">₹${mrp}</span> ₹${item.price.toFixed(2)}`;
-        details.appendChild(priceLine);
-
-        // Delivery info and actions, Flipkart-style
-        const meta = document.createElement('div');
-        meta.className = 'cart-item-meta';
-
-        const delivery = document.createElement('span');
-        delivery.textContent = 'Delivery by 3–5 days';
-        meta.appendChild(delivery);
-
-        const freeDelivery = document.createElement('span');
-        freeDelivery.textContent = 'Free Delivery';
-        meta.appendChild(freeDelivery);
-
-        const actions = document.createElement('div');
-        actions.className = 'cart-item-actions';
-
-        const saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.textContent = 'Save for later';
-        saveBtn.onclick = () => showToast('Save for later is not implemented yet.', 'error');
-
-        const wishlistBtn = document.createElement('button');
-        wishlistBtn.type = 'button';
-        wishlistBtn.textContent = 'Move to wishlist';
-        wishlistBtn.onclick = () => showToast('Wishlist is not implemented yet.', 'error');
-
-        actions.appendChild(saveBtn);
-        actions.appendChild(wishlistBtn);
-
-        details.appendChild(meta);
-        details.appendChild(actions);
-
-        leftSection.appendChild(details);
-
-        const rightSection = document.createElement('div');
-        rightSection.className = 'cart-item-right';
-
-        const quantityControls = document.createElement('div');
-        quantityControls.className = 'quantity-controls';
-
-        const decreaseBtn = document.createElement('button');
-        decreaseBtn.textContent = '-';
-        decreaseBtn.onclick = () => decreaseQuantity(item.id, item.gender);
-
-        const quantitySpan = document.createElement('span');
-        quantitySpan.textContent = item.quantity;
-
-        const increaseBtn = document.createElement('button');
-        increaseBtn.textContent = '+';
-        increaseBtn.onclick = () => increaseQuantity(item.id, item.gender);
-
-        quantityControls.appendChild(decreaseBtn);
-        quantityControls.appendChild(quantitySpan);
-        quantityControls.appendChild(increaseBtn);
-
-        const itemTotalSection = document.createElement('div');
-        itemTotalSection.className = 'cart-item-total';
-
-        const itemTotal = document.createElement('p');
-        const lineTotal = item.price * item.quantity;
-        const mrpLineTotal = (item.price * 1.1) * item.quantity; // fake MRP ~10% higher
-        itemTotal.textContent = `₹${lineTotal.toFixed(2)}`;
-
-        mrpTotal += mrpLineTotal;
-
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove';
-        removeBtn.onclick = () => removeFromCart(item.id, item.gender);
-
-        itemTotalSection.appendChild(itemTotal);
-        itemTotalSection.appendChild(removeBtn);
-
-        rightSection.appendChild(quantityControls);
-        rightSection.appendChild(itemTotalSection);
-
-        itemElement.appendChild(leftSection);
-        itemElement.appendChild(rightSection);
-
-        cartItems.appendChild(itemElement);
-
-        total += lineTotal;
-    });
-
-    cartTotal.textContent = total.toFixed(2);
-
-    // Bill-time discount preview: 10% off for orders ≥ ₹1000
-    const discountLineEl = document.getElementById('cart-discount-line');
-    if (discountLineEl) {
-        if (total >= 1000) {
-            const previewDiscount = total * 0.10;
-            discountLineEl.textContent = `Discount at checkout: -₹${previewDiscount.toFixed(2)}`;
-            discountLineEl.style.color = '#388e3c';
-        } else {
-            discountLineEl.textContent = '';
-        }
-    }
-
-    const savingTextEl = document.getElementById('cart-saving-text');
-    if (savingTextEl) {
-        const savings = mrpTotal - total;
-        if (savings > 0.5) {
-            savingTextEl.textContent = `You will save ₹${savings.toFixed(2)} on this order.`;
-        } else {
-            savingTextEl.textContent = '';
-        }
-    }
 }
 
 // Function to checkout
@@ -3765,227 +3583,6 @@ function closeCustomerProfileModal() {
 function goToVendorProducts() {
     // Navigate vendor to their dashboard
     window.location.href = 'vendor.html';
-}
-
-// Function to close budgies modal
-function closeBudgiesModal() {
-    const modal = document.getElementById('budgies-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Function to show gender modal (for pet products)
-function showGenderModal() {
-    const modal = document.getElementById('gender-modal');
-    if (modal) {
-        modal.style.display = 'block';
-    }
-}
-
-// Function to close gender modal
-function closeGenderModal() {
-    const modal = document.getElementById('gender-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    pendingProduct = null;
-}
-
-// Function to select gender
-function selectGender(gender) {
-    if (pendingProduct) {
-        const { id, name, price, category, image } = pendingProduct;
-        const existingItem = cart.find(item => item.id === id && item.gender === gender);
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart.push({ id, name, price, quantity: 1, gender, category, image });
-        }
-        updateCartCount();
-        updateCartDisplay();
-        showToast(`${name} (${gender}) added to cart`, 'success');
-        closeGenderModal();
-    }
-}
-
-// Function to handle checkout form submission
-function handleCheckoutFormSubmission(e) {
-    e.preventDefault();
-
-    // Safely read form fields (some, like payment, may not exist on this page)
-    const nameInput = document.getElementById('name');
-    const emailInput = document.getElementById('email');
-    const addressInput = document.getElementById('address');
-    const phoneInput = document.getElementById('phone');
-
-    const name = nameInput ? nameInput.value.trim() : '';
-    const email = emailInput ? emailInput.value.trim() : '';
-    const address = addressInput ? addressInput.value.trim() : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
-
-    // Basic validation: require only name, phone and address
-    if (!name || !address || !phone) {
-        showToast('Please fill in your name, phone number, and address.', 'error');
-        return;
-    }
-
-    // Determine selected payment method
-    const selectedRadio = document.querySelector('input[name="payment-method"]:checked');
-    const paymentMethodSelect = document.getElementById('payment-method'); // legacy fallback if present
-    let paymentMethod = '';
-    let paymentDetails = '';
-
-    if (selectedRadio) {
-        paymentMethod = selectedRadio.value;
-    } else if (paymentMethodSelect) {
-        paymentMethod = paymentMethodSelect.value;
-    }
-
-    // Collect payment details based on method
-    if (paymentMethod === 'card') {
-        const cardNumberInput = document.getElementById('card-number');
-        const cardNameInput = document.getElementById('card-name');
-        const cardExpiryInput = document.getElementById('card-expiry');
-        const cardNumber = cardNumberInput ? cardNumberInput.value.replace(/\s+/g, '') : '';
-        const cardName = cardNameInput ? cardNameInput.value.trim() : '';
-        const cardExpiry = cardExpiryInput ? cardExpiryInput.value.trim() : '';
-
-        if (!cardNumber || !cardName || !cardExpiry) {
-            showToast('Please fill in all card details.', 'error');
-            return;
-        }
-        const last4 = cardNumber.slice(-4);
-        paymentDetails = `Card ****${last4} (exp ${cardExpiry})`;
-    } else if (paymentMethod === 'upi') {
-        const upiInput = document.getElementById('upi-id');
-        const upiId = upiInput ? upiInput.value.trim() : '';
-        if (!upiId) {
-            showToast('Please enter your UPI ID.', 'error');
-            return;
-        }
-        paymentDetails = `UPI ${upiId}`;
-    } else if (paymentMethod === 'cod') {
-        paymentDetails = 'Cash on Delivery';
-    } else if (!paymentMethod) {
-        // No explicit method selected; treat as unspecified but allow order to go through
-        paymentMethod = 'unspecified';
-        paymentDetails = '';
-    }
-
-    // Get current cart total from the UI
-    const cartTotalEl = document.getElementById('cart-total');
-    const rawTotal = parseFloat(cartTotalEl ? cartTotalEl.textContent : '0') || 0;
-
-    // If customer has a preferred payment method saved, pre-fill when empty
-    try {
-        const stored = localStorage.getItem('citymart_profile');
-        if (stored) {
-            const profile = JSON.parse(stored);
-            if (!paymentMethod && profile.paymentMethod) {
-                paymentMethod = profile.paymentMethod;
-                const paymentMethodSelect = document.getElementById('payment-method');
-                if (paymentMethodSelect) paymentMethodSelect.value = paymentMethod;
-            }
-            if (!paymentDetails && profile.paymentDetails) {
-                paymentDetails = profile.paymentDetails;
-                const paymentDetailsInput = document.getElementById('payment-details');
-                if (paymentDetailsInput) paymentDetailsInput.value = paymentDetails;
-            }
-        }
-    } catch (e) {
-        console.warn('Could not read payment preference from citymart_profile', e);
-    }
-
-    // BILL-TIME DISCOUNT LOGIC
-    // Example rule: 10% discount for orders ≥ ₹1000
-    let discount = 0;
-    if (rawTotal >= 1000) {
-        discount = rawTotal * 0.10;
-    }
-
-    const finalAmount = rawTotal - discount;
-
-    // Wallet payment handling
-    if (paymentMethod === 'wallet') {
-        let walletBalance = 0;
-        let profile = {};
-        try {
-            const stored = localStorage.getItem('citymart_profile');
-            if (stored) {
-                profile = JSON.parse(stored) || {};
-                walletBalance = typeof profile.walletBalance === 'number'
-                    ? profile.walletBalance
-                    : Number(profile.walletBalance) || 0;
-            }
-        } catch (e) {
-            console.warn('Could not read wallet balance', e);
-        }
-
-        if (walletBalance < finalAmount) {
-            showToast('Not enough balance in wallet. Please add money or choose another payment method.', 'error');
-            return;
-        }
-
-        walletBalance -= finalAmount;
-        profile.walletBalance = walletBalance;
-        try {
-            localStorage.setItem('citymart_profile', JSON.stringify(profile));
-        } catch (e) {
-            console.warn('Could not update wallet balance after checkout', e);
-        }
-    }
-
-    // Build a bill-style message
-    const billMessage =
-        `Order Summary\n` +
-        `-------------------------\n` +
-        `Items Total:  ₹${rawTotal.toFixed(2)}\n` +
-        `Discount:     -₹${discount.toFixed(2)}\n` +
-        `-------------------------\n` +
-        `Payable:       ${finalAmount.toFixed(2)}\\n\\n` +
-        `Name:   ${name}\\n` +
-        `Email/Phone:  ${email} / ${phone}\\n` +
-        `Address:${address}\\n` +
-        `Payment: ${paymentMethod} - ${paymentDetails}`;
-
-    // Notify user
-    showToast('Order placed successfully!', 'success');
-    alert(billMessage);
-
-    // Persist order in backend if logged in
-    try {
-        if (currentUser && cart && cart.length) {
-            const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-            const orderPayload = {
-                userId: currentUser.id || currentUser._id,
-                products: cart.map(item => ({
-                    productId: item.id,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
-                totalAmount: finalAmount,
-            };
-            fetch(apiBase + '/api/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderPayload),
-            }).catch(err => console.warn('Failed to save order:', err));
-        }
-    } catch (e) {
-        console.warn('Error while sending order to backend:', e);
-    }
-
-    // Clear cart and close modal
-    cart = [];
-    saveCartToStorage();
-    updateCartCount();
-    updateCartDisplay();
-    closeCheckoutModal();
-
-    // After checkout, (preferences popup removed)
 }
 
 // Initialize payment method UI in checkout modal
