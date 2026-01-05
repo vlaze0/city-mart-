@@ -90,7 +90,15 @@ function showCartModal() {
     const modal = document.getElementById('cart-modal');
     if (modal) {
         updateCartDisplay();
+        // Show cart overlay below the fixed header while keeping
+        // the navbar visible above it.
         modal.style.display = 'block';
+        modal.style.position = 'fixed';
+        modal.style.top = '90px';           // header height
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = 'calc(100% - 90px)';
+        modal.style.zIndex = '2500';        // below header (3000)
     }
 }
 
@@ -2175,6 +2183,33 @@ function closeUserMenuDropdown() {
     if (dropdown) {
         dropdown.classList.remove('open');
     }
+}
+
+// Close all overlays/modals and mobile navigation.
+// Useful when navigating via the main navbar so old popups
+// (login, cart, vendors, etc.) do not stay open.
+function closeAllOverlays() {
+    try { closeUserMenuDropdown(); } catch (e) {}
+    try { closeLoginOptionsModal(); } catch (e) {}
+    try { closeAuthModal(); } catch (e) {}
+    try { closeCartModal(); } catch (e) {}
+    try { closeCheckoutModal(); } catch (e) {}
+    try { closeVendorsModal(); } catch (e) {}
+    try { closeVendorProductsModal(); } catch (e) {}
+    try { closeOrdersModal(); } catch (e) {}
+    try { closeBudgiesModal(); } catch (e) {}
+    try { closeGenderModal(); } catch (e) {}
+    try { closeVendorProfileModal(); } catch (e) {}
+    try { closeCustomerProfileModal(); } catch (e) {}
+
+    // Also collapse mobile navigation and header search, if open
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const hamburger = document.querySelector('.hamburger');
+    if (mobileMenu) mobileMenu.classList.remove('active');
+    if (hamburger) hamburger.classList.remove('active');
+
+    const searchWrapper = document.querySelector('.global-search-wrapper');
+    if (searchWrapper) searchWrapper.classList.remove('global-search-open');
 }
 
 function openCartFromMenu() {

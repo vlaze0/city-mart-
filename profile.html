@@ -24,10 +24,10 @@
         <div class="navbar-right">
             <nav>
                 <ul>
-                    <li><a href="index.html#home">Home</a></li>
-                    <li><a href="#" onclick="showVendorsModal()">Product</a></li>
-                    <li><a href="#" onclick="showOrdersModal()">My Orders</a></li>
-                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="index.html#home" onclick="closeAllOverlays()">Home</a></li>
+                    <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
+                    <li><a href="#" onclick="closeAllOverlays(); showOrdersModal(); return false;">My Orders</a></li>
+                    <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
                     <li class="user-menu">
                         <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
                         <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
