@@ -717,6 +717,40 @@ nav ul li a:hover {
     padding: 0.75rem;
 }
 
+/* Products listing page: make cards visually similar to the
+   mini cards used in the "Similar products" strip on the
+   detail page, without changing the detail layout itself. */
+.products-page .product-card-detailed {
+    display: flex;
+    flex-direction: column;
+}
+
+.products-page .product-gallery {
+    padding: 0.75rem 0.75rem 0;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.products-page .product-main-img {
+    height: 150px;
+}
+
+.products-page .product-thumbs {
+    display: none;
+}
+
+.products-page .product-info-detailed {
+    padding: 0.75rem 0.9rem 1rem;
+}
+
+.products-page .product-card-detailed h3 {
+    font-size: 1rem;
+}
+
+.products-page .product-card-detailed .price {
+    margin-top: 0.25rem;
+}
+
 /* Premium Dog Food special background */
 .premium-dog-food-card {
     background-image: url('./images/premium-dog-food-bg.jpg');
