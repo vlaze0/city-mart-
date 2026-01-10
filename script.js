@@ -2595,10 +2595,98 @@ document.addEventListener('DOMContentLoaded', function() {
                 const opt = document.createElement('option');
                 opt.value = name;
                 speciesList.appendChild(opt);
-            });
-        }
+    }
+    }
     }
 });
+
+// Show a professional OTP input dialog instead of using window.prompt
+function askForOtpCode(email, statusEl) {
+    return new Promise((resolve, reject) => {
+        // Remove any existing OTP overlay
+        const existing = document.getElementById('otp-verification-overlay');
+        if (existing && existing.parentNode) {
+            existing.parentNode.removeChild(existing);
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'otp-verification-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.bottom = '0';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = '9999';
+
+        const dialog = document.createElement('div');
+        dialog.style.backgroundColor = '#fff';
+        dialog.style.borderRadius = '8px';
+        dialog.style.maxWidth = '400px';
+        dialog.style.width = '90%';
+        dialog.style.padding = '20px';
+        dialog.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+
+        dialog.innerHTML = `
+            <h2 style="margin-top:0;margin-bottom:8px;font-size:20px;">Verify your email</h2>
+            <p style="margin:0 0 12px 0;font-size:14px;color:#555;">
+                A one-time verification code has been sent to
+                <strong>${email}</strong>. Please enter it below to complete your registration.
+            </p>
+            <label for="otp-code-input" style="display:block;font-size:13px;margin-bottom:4px;">Verification code</label>
+            <input id="otp-code-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                   style="width:100%;padding:8px 10px;font-size:16px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;" />
+            <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+                <button type="button" id="otp-cancel-btn" style="padding:8px 14px;font-size:14px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;cursor:pointer;">Cancel</button>
+                <button type="button" id="otp-submit-btn" style="padding:8px 14px;font-size:14px;border-radius:4px;border:1px solid transparent;background:#007bff;color:#fff;cursor:pointer;">Verify</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const codeInput = dialog.querySelector('#otp-code-input');
+        const cancelBtn = dialog.querySelector('#otp-cancel-btn');
+        const submitBtn = dialog.querySelector('#otp-submit-btn');
+
+        const close = () => {
+            if (overlay && overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            if (statusEl) statusEl.textContent = 'Verification cancelled.';
+            close();
+            reject(new Error('cancelled'));
+        });
+
+        const handleSubmit = () => {
+            const code = codeInput.value.trim();
+            if (!code) {
+                showToast('Please enter the verification code.', 'error');
+                return;
+            }
+            close();
+            resolve(code);
+        };
+
+        submitBtn.addEventListener('click', handleSubmit);
+        codeInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+
+        // Auto-focus the input for better UX
+        setTimeout(() => {
+            try { codeInput.focus(); } catch (e) {}
+        }, 0);
+    });
+}
 
 // Signup flow with verification code
 async function handleSignupFlow(email, password, statusEl) {
@@ -2628,14 +2716,17 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    // For this demo, show the code to the user directly.
-    const codePrompt = `A verification code was generated for ${email}.\n` +
-        `For demo purposes, use this code: ${data.verificationCode}.\n\n` +
-        `Please enter the verification code:`;
+    // Production behaviour: do NOT display the OTP; only show a generic message
+    const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
+    showToast(infoMsg, 'success');
+    if (statusEl) statusEl.textContent = infoMsg;
 
-    const userCode = window.prompt(codePrompt, '');
-    if (!userCode) {
-        if (statusEl) statusEl.textContent = 'Verification cancelled.';
+    // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
+    let userCode;
+    try {
+        userCode = await askForOtpCode(email, statusEl);
+    } catch (e) {
+        // User cancelled
         return;
     }
 
@@ -4439,14 +4530,17 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    // For this demo, show the code to the user directly.
-    const codePrompt = `A verification code was generated for ${email}.\n` +
-        `For demo purposes, use this code: ${data.verificationCode}.\n\n` +
-        `Please enter the verification code:`;
+    // Production behaviour: do NOT display the OTP; only show a generic message
+    const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
+    showToast(infoMsg, 'success');
+    if (statusEl) statusEl.textContent = infoMsg;
 
-    const userCode = window.prompt(codePrompt, '');
-    if (!userCode) {
-        if (statusEl) statusEl.textContent = 'Verification cancelled.';
+    // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
+    let userCode;
+    try {
+        userCode = await askForOtpCode(email, statusEl);
+    } catch (e) {
+        // User cancelled
         return;
     }
 

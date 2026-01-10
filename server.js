@@ -7,6 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
+const nodemailer = require('nodemailer');
 const { authenticateToken, requireAdmin, requireVendor, requireCustomer, requireAdminOrVendor } = require('./middleware');
 require('dotenv').config();
 
@@ -45,6 +46,33 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Nodemailer SMTP transporter for sending OTP emails
+const mailTransporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+async function sendVerificationEmail(to, code) {
+  if (!to) {
+    throw new Error('Email address is required to send verification code');
+  }
+
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const appName = process.env.APP_NAME || 'CityMart';
+
+  await mailTransporter.sendMail({
+    from,
+    to,
+    subject: `${appName} - Your verification code`,
+    text: `Your ${appName} verification code is: ${code}\n\nThis code will expire in 5 minutes. If you did not request this, you can safely ignore this email.`,
+  });
+}
+
 // Product Schema
 const productSchema = new mongoose.Schema({
   name: String,
@@ -72,7 +100,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'vendor', 'customer'], default: 'customer' },
   phone: { type: String },
+  // Stores a bcrypt hash of the one-time verification code (never the raw code)
   verificationCode: { type: String },
+  // Expiry timestamp for the verification code (e.g. 5 minutes from generation)
+  verificationCodeExpiresAt: { type: Date },
   isVerified: { type: Boolean, default: false },
   // Governance fields for admin control and auditing
   isBlocked: { type: Boolean, default: false },
@@ -272,35 +303,53 @@ app.post('/api/users/request-signup-code', async (req, res) => {
       return res.status(400).json({ message: 'Username, email, and password are required' });
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    let user = await User.findOne({ email });
+
+    // If a fully verified account already exists for this email, do not allow re-signup
+    if (user && user.isVerified) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword,
-      role: role || 'customer',
-      phone,
-      verificationCode,
-      isVerified: false,
-    });
+    // Generate a cryptographically secure 6-digit code
+    const verificationCode = crypto.randomInt(100000, 1000000).toString();
+    const verificationCodeHash = await bcrypt.hash(verificationCode, 10);
+    const verificationCodeExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    if (user && !user.isVerified) {
+      // Reuse existing unverified user record – update details and OTP
+      user.username = username;
+      user.password = hashedPassword;
+      user.role = role || 'customer';
+      user.phone = phone;
+      user.verificationCode = verificationCodeHash;
+      user.verificationCodeExpiresAt = verificationCodeExpiresAt;
+    } else {
+      // Create a new unverified user record
+      user = new User({
+        username,
+        email,
+        password: hashedPassword,
+        role: role || 'customer',
+        phone,
+        verificationCode: verificationCodeHash,
+        verificationCodeExpiresAt,
+        isVerified: false,
+      });
+    }
+
+    // Send the raw OTP to the user's email only – never include it in API responses
+    await sendVerificationEmail(email, verificationCode);
 
     await user.save();
 
-    // NOTE: In a real app you would send this code via email/SMS.
-    // For this demo, we return it in the response so the frontend can show it.
     res.status(201).json({
-      message: 'Verification code generated. Please verify your account.',
-      verificationCode,
-      userId: user._id,
+      message: 'Verification code sent to your email. Please enter it to complete signup.',
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error generating signup verification code:', error);
+    res.status(400).json({ message: 'Could not send verification code. Please try again.' });
   }
 });
 
@@ -321,12 +370,26 @@ app.post('/api/users/verify-signup', async (req, res) => {
       return res.status(400).json({ message: 'User is already verified' });
     }
 
-    if (user.verificationCode !== code) {
+    if (!user.verificationCode || !user.verificationCodeExpiresAt) {
+      return res.status(400).json({ message: 'No active verification code. Please request a new one.' });
+    }
+
+    if (user.verificationCodeExpiresAt.getTime() < Date.now()) {
+      // Invalidate the old code
+      user.verificationCode = undefined;
+      user.verificationCodeExpiresAt = undefined;
+      await user.save();
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
+    const isCodeValid = await bcrypt.compare(code, user.verificationCode);
+    if (!isCodeValid) {
       return res.status(400).json({ message: 'Invalid verification code' });
     }
 
     user.isVerified = true;
     user.verificationCode = undefined;
+    user.verificationCodeExpiresAt = undefined;
     await user.save();
 
     res.json({
@@ -334,6 +397,7 @@ app.post('/api/users/verify-signup', async (req, res) => {
       user: { id: user._id, username: user.username, email: user.email, role: user.role },
     });
   } catch (error) {
+    console.error('Error verifying signup code:', error);
     res.status(400).json({ message: error.message });
   }
 });
