@@ -4495,14 +4495,16 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    const role = loginContext === 'vendor' ? 'vendor' : 'customer';
+  const role = loginContext === 'vendor' ? 'vendor' : 'customer';
 
-    // Step 1: request verification code
-    const resp = await fetch('/api/users/request-signup-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, role }),
-    });
+  const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+  // Step 1: request verification code
+  const resp = await fetch(apiBase + '/api/users/request-signup-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password, role }),
+  });
 
     const data = await resp.json();
 

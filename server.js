@@ -47,6 +47,8 @@ const razorpayInstance = new Razorpay({
 });
 
 // Nodemailer SMTP transporter for sending OTP emails
+// This is configured via environment variables so that the same code
+// works in development, staging, and production without changes.
 const mailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
@@ -57,13 +59,25 @@ const mailTransporter = nodemailer.createTransport({
   },
 });
 
+const isEmailServiceConfigured = !!(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS
+);
+
 async function sendVerificationEmail(to, code) {
   if (!to) {
     throw new Error('Email address is required to send verification code');
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@citymart.local';
   const appName = process.env.APP_NAME || 'CityMart';
+
+  if (!isEmailServiceConfigured) {
+    // Fail fast with a clear error so that the caller can surface a
+    // proper 5xx instead of a misleading 4xx to the frontend.
+    throw new Error('Email service is not configured. Please set SMTP_* environment variables.');
+  }
 
   await mailTransporter.sendMail({
     from,
@@ -300,14 +314,14 @@ app.post('/api/users/request-signup-code', async (req, res) => {
   try {
     const { username, email, password, role, phone } = req.body;
     if (!email || !password || !username) {
-      return res.status(400).json({ message: 'Username, email, and password are required' });
+      return res.status(422).json({ message: 'Username, email, and password are required' });
     }
 
     let user = await User.findOne({ email });
 
     // If a fully verified account already exists for this email, do not allow re-signup
     if (user && user.isVerified) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(409).json({ message: 'User already exists with this email' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -318,7 +332,7 @@ app.post('/api/users/request-signup-code', async (req, res) => {
     const verificationCodeExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     if (user && !user.isVerified) {
-      // Reuse existing unverified user record – update details and OTP
+      // Reuse existing unverified user record  update details and OTP
       user.username = username;
       user.password = hashedPassword;
       user.role = role || 'customer';
@@ -339,7 +353,7 @@ app.post('/api/users/request-signup-code', async (req, res) => {
       });
     }
 
-    // Send the raw OTP to the user's email only – never include it in API responses
+    // Send the raw OTP to the user's email only  never include it in API responses
     await sendVerificationEmail(email, verificationCode);
 
     await user.save();
@@ -349,7 +363,26 @@ app.post('/api/users/request-signup-code', async (req, res) => {
     });
   } catch (error) {
     console.error('Error generating signup verification code:', error);
-    res.status(400).json({ message: 'Could not send verification code. Please try again.' });
+
+    // Map low-level errors to appropriate HTTP status codes so the
+    // frontend can distinguish between validation issues and true
+    // server-side failures.
+    if (error && error.code === 11000) {
+      // Mongo duplicate key (username/email already taken)
+      return res.status(409).json({
+        message: 'An account with this email or username already exists.',
+      });
+    }
+
+    if (error && error.message && error.message.includes('Email service is not configured')) {
+      return res.status(503).json({
+        message: 'Signup temporarily unavailable. Email service is not configured.',
+      });
+    }
+
+    res.status(500).json({
+      message: 'Could not send verification code. Please try again later.',
+    });
   }
 });
 
