@@ -93,25 +93,25 @@ async function sendOTPEmail(email, otp) {
 
 
 
-const isEmailServiceConfigured = !!(
-  process.env.SMTP_HOST &&
-  process.env.SMTP_USER &&
-  process.env.SMTP_PASS
+// const isEmailServiceConfigured = !!(
+  // process.env.SMTP_HOST &&
+  // process.env.SMTP_USER &&
+  // process.env.SMTP_PASS
 );
 
-async function sendVerificationEmail(to, code) {
-  if (!to) {
-    throw new Error('Email address is required to send verification code');
-  }
+// async function sendVerificationEmail(to, code) {
+  // if (!to) {
+    // throw new Error('Email address is required to send verification code');
+  // }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@citymart.local';
-  const appName = process.env.APP_NAME || 'CityMart';
+  // const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@citymart.local';
+  // const appName = process.env.APP_NAME || 'CityMart';
 
-  if (!isEmailServiceConfigured) {
-    // Fail fast with a clear error so that the caller can surface a
-    // proper 5xx instead of a misleading 4xx to the frontend.
-    throw new Error('Email service is not configured. Please set SMTP_* environment variables.');
-  }
+  // if (!isEmailServiceConfigured) {
+    // // Fail fast with a clear error so that the caller can surface a
+    // // proper 5xx instead of a misleading 4xx to the frontend.
+    // throw new Error('Email service is not configured. Please set SMTP_* environment variables.');
+  // }
 
   // await mailTransporter.sendMail({
     // from,
@@ -120,7 +120,7 @@ async function sendVerificationEmail(to, code) {
     // text: `Your ${appName} verification code is: ${code}\n\nThis code will expire in 5 minutes. If you did not request this, you can safely ignore this email.`,
   // });
   
-  await sendOTPEmail(email, otp);
+  //await sendOTPEmail(email, otp);
 
 }
 
@@ -391,7 +391,8 @@ app.post('/api/users/request-signup-code', async (req, res) => {
     }
 
     // Send the raw OTP to the user's email only  never include it in API responses
-    await sendVerificationEmail(email, verificationCode);
+   await sendOTPEmail(email, otp);
+
 
     await user.save();
 
