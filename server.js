@@ -7,7 +7,9 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
-const nodemailer = require('nodemailer');
+//const nodemailer = require('nodemailer');
+const axios = require('axios');
+
 const { authenticateToken, requireAdmin, requireVendor, requireCustomer, requireAdminOrVendor } = require('./middleware');
 require('dotenv').config();
 
@@ -49,15 +51,47 @@ const razorpayInstance = new Razorpay({
 // Nodemailer SMTP transporter for sending OTP emails
 // This is configured via environment variables so that the same code
 // works in development, staging, and production without changes.
-const mailTransporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+	// const mailTransporter = nodemailer.createTransport({
+	  // host: process.env.SMTP_HOST,
+	  // port: Number(process.env.SMTP_PORT) || 587,
+	  // secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+	  // auth: {
+		// user: process.env.SMTP_USER,
+		// pass: process.env.SMTP_PASS,
+	  // },
+	// });
+async function sendOTPEmail(email, otp) {
+  try {
+    await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: {
+          email: process.env.BREVO_SENDER,
+          name: 'CityMart'
+        },
+        to: [{ email }],
+        subject: 'CityMart Verification Code',
+        htmlContent: `
+          <h2>CityMart OTP Verification</h2>
+          <p>Your OTP is:</p>
+          <h1>${otp}</h1>
+          <p>This OTP is valid for 5 minutes.</p>
+        `
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (err) {
+    console.error('Brevo email error:', err.response?.data || err.message);
+    throw err;
+  }
+}
+
+
 
 const isEmailServiceConfigured = !!(
   process.env.SMTP_HOST &&
@@ -79,12 +113,15 @@ async function sendVerificationEmail(to, code) {
     throw new Error('Email service is not configured. Please set SMTP_* environment variables.');
   }
 
-  await mailTransporter.sendMail({
-    from,
-    to,
-    subject: `${appName} - Your verification code`,
-    text: `Your ${appName} verification code is: ${code}\n\nThis code will expire in 5 minutes. If you did not request this, you can safely ignore this email.`,
-  });
+  // await mailTransporter.sendMail({
+    // from,
+    // to,
+    // subject: `${appName} - Your verification code`,
+    // text: `Your ${appName} verification code is: ${code}\n\nThis code will expire in 5 minutes. If you did not request this, you can safely ignore this email.`,
+  // });
+  
+  await sendOTPEmail(email, otp);
+
 }
 
 // Product Schema
