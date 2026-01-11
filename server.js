@@ -97,7 +97,16 @@ async function sendOTPEmail(email, otp) {
   // process.env.SMTP_HOST &&
   // process.env.SMTP_USER &&
   // process.env.SMTP_PASS
-);
+//);
+
+async function sendVerificationEmail(email, otp) {
+  if (!email) {
+    throw new Error('Email address is required');
+  }
+
+  await sendOTPEmail(email, otp);
+}
+
 
 // async function sendVerificationEmail(to, code) {
   // if (!to) {
@@ -122,7 +131,7 @@ async function sendOTPEmail(email, otp) {
   
   //await sendOTPEmail(email, otp);
 
-}
+//}
 
 // Product Schema
 const productSchema = new mongoose.Schema({
