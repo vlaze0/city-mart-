@@ -1,3 +1,10 @@
+const API_BASE =
+  window.location.protocol === 'file:'
+    ? 'http://localhost:3000'
+    : '';
+
+
+
 // Script loaded
 console.log('Script loaded');
 
@@ -399,16 +406,16 @@ async function loadOrders() {
     }
 
     try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // hi
         let url = '';
         let mode = 'customer';
 
         if (currentUser.role === 'customer') {
-            url = apiBase + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
+            url = API_BASE + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
             if (subtitle) subtitle.textContent = 'Orders placed from this customer account.';
         } else if (currentUser.role === 'vendor') {
             // Vendors see orders containing their products
-            url = apiBase + '/api/orders';
+            url = API_BASE + '/api/orders';
             if (subtitle) subtitle.textContent = 'Orders that include your products.';
             mode = 'vendor';
         } else {
@@ -585,9 +592,9 @@ async function cancelCustomerOrder(orderId) {
     if (!ok) return;
 
     try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // hi
         // Use dedicated customer cancel route so it never goes through admin-only checks
-        const resp = await fetch(apiBase + '/api/customer/orders/' + orderId + '/cancel', {
+        const resp = await fetch(API_BASE + '/api/customer/orders/' + orderId + '/cancel', {
             method: 'PUT',
             headers: {
                 'Authorization': 'Bearer ' + authToken,
@@ -818,9 +825,9 @@ async function handleVendorProductSubmit(event) {
     }
 
     try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // hi
         const isEditing = !!editingProductId;
-        const url = apiBase + (isEditing ? `/api/products/${editingProductId}` : '/api/products');
+        const url = API_BASE + (isEditing ? `/api/products/${editingProductId}` : '/api/products');
         const method = isEditing ? 'PUT' : 'POST';
 
         const resp = await fetch(url, {
@@ -934,8 +941,8 @@ async function handleLoginSubmit(event) {
             return;
         }
 
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-        const response = await fetch(apiBase + '/api/users/login', {
+        // hi
+        const response = await fetch(API_BASE + '/api/users/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -1422,7 +1429,7 @@ async function handleCheckoutFormSubmission(e) {
         `Address:${address}\n` +
         `Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online (Razorpay)'}`;
 
-    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+    // hi
 
     // Prepare products payload from cart for backend order creation
     const productsPayload = cart.map(item => ({
@@ -1438,7 +1445,7 @@ async function handleCheckoutFormSubmission(e) {
     // If Cash on Delivery, skip Razorpay and create an order directly in MongoDB
     if (paymentMethod === 'cod') {
         try {
-            const resp = await fetch(apiBase + '/api/orders', {
+            const resp = await fetch(API_BASE + '/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1489,7 +1496,7 @@ async function handleCheckoutFormSubmission(e) {
 
     try {
         // 1) Ask backend to create a Razorpay order
-        const createRes = await fetch(apiBase + '/api/payments/create-order', {
+        const createRes = await fetch(API_BASE + '/api/payments/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: finalAmount }),
@@ -1531,7 +1538,7 @@ async function handleCheckoutFormSubmission(e) {
             },
             handler: async function (response) {
                 try {
-                    const verifyRes = await fetch(apiBase + '/api/payments/verify', {
+                    const verifyRes = await fetch(API_BASE + '/api/payments/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1987,8 +1994,8 @@ async function initCustomerDashboardPage() {
 
     if (!tbody) return;
 
-    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-    const url = apiBase + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
+    // hi
+    const url = API_BASE + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
 
     const headers = {};
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -2713,10 +2720,10 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+    // hi
 
     // Step 2: verify the code
-    const verifyResp = await fetch(apiBase + '/api/users/verify-signup', {
+    const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: userCode.trim() }),
@@ -2734,7 +2741,7 @@ async function handleSignupFlow(email, password, statusEl) {
     showToast('Account verified successfully. Logging you in...', 'success');
 
     // Auto-login after successful verification
-    const loginResp = await fetch(apiBase + '/api/users/login', {
+    const loginResp = await fetch(API_BASE + '/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -2914,16 +2921,16 @@ async function loadOrders() {
     }
 
     try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // hi
         let url = '';
         let mode = 'customer';
 
         if (currentUser.role === 'customer') {
-            url = apiBase + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
+            url = API_BASE + '/api/orders/' + encodeURIComponent(currentUser.id || currentUser._id);
             if (subtitle) subtitle.textContent = 'Orders placed from this customer account.';
         } else if (currentUser.role === 'vendor') {
             // Vendors see orders containing their products
-            url = apiBase + '/api/orders';
+            url = API_BASE + '/api/orders';
             if (subtitle) subtitle.textContent = 'Orders that include your products.';
             mode = 'vendor';
         } else {
@@ -3278,9 +3285,9 @@ async function handleVendorProductSubmit(event) {
     }
 
     try {
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        // hi
         const isEditing = !!editingProductId;
-        const url = apiBase + (isEditing ? `/api/products/${editingProductId}` : '/api/products');
+        const url = API_BASE + (isEditing ? `/api/products/${editingProductId}` : '/api/products');
         const method = isEditing ? 'PUT' : 'POST';
 
         const resp = await fetch(url, {
@@ -3394,8 +3401,8 @@ async function handleLoginSubmit(event) {
             return;
         }
 
-        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-        const response = await fetch(apiBase + '/api/users/login', {
+        // hi
+        const response = await fetch(API_BASE + '/api/users/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -4497,10 +4504,10 @@ async function handleSignupFlow(email, password, statusEl) {
 
   const role = loginContext === 'vendor' ? 'vendor' : 'customer';
 
-  const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+  // hi
 
   // Step 1: request verification code
-  const resp = await fetch(apiBase + '/api/users/request-signup-code', {
+  const resp = await fetch(API_BASE + '/api/users/request-signup-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password, role }),
@@ -4529,10 +4536,10 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+    // hi
 
     // Step 2: verify the code
-    const verifyResp = await fetch(apiBase + '/api/users/verify-signup', {
+    const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: userCode.trim() }),
@@ -4550,7 +4557,7 @@ async function handleSignupFlow(email, password, statusEl) {
     showToast('Account verified successfully. Logging you in...', 'success');
 
     // Auto-login after successful verification
-    const loginResp = await fetch(apiBase + '/api/users/login', {
+    const loginResp = await fetch(API_BASE + '/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
