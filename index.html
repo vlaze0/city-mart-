@@ -26,16 +26,12 @@
                 <nav>
                     <ul>
                         <li><a href="index.html#home" onclick="closeAllOverlays()">Home</a></li>
-                        <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
-                        <li><a href="#" onclick="closeAllOverlays(); handleProfileNavClick(event)">Profile</a></li>
+                        <li><a href="products.html" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
+                        <li><a href="profile.html" onclick="closeAllOverlays(); handleProfileNavClick(event); return false;">Profile</a></li>
                         <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
                         <li class="user-menu">
-                            <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
-                            <div class="user-menu-dropdown" id="user-menu-dropdown">
-                                <button type="button" onclick="openVendorProfileModal()">Profile</button>
-                                <button type="button" onclick="goToVendorProducts()">My Products</button>
-                                <button type="button" onclick="logout()">Logout</button>
-                            </div>
+                            <a href="#login" class="login-btn" onclick="showLoginOptions(); return false;" id="user-menu-toggle">Login</a>
+                            <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
                         </li>
                     </ul>
                 </nav>
@@ -51,10 +47,10 @@
             </div>
             <div class="mobile-menu">
                 <a href="index.html#home" onclick="closeAllOverlays()">Home</a>
-                <a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a>
-                <a href="#" onclick="closeAllOverlays(); handleProfileNavClick(event)">Profile</a>
+                <a href="products.html" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a>
+                <a href="profile.html" onclick="closeAllOverlays(); handleProfileNavClick(event); return false;">Profile</a>
                 <a href="index.html#contact" onclick="closeAllOverlays()">Contact</a>
-                <a href="#" onclick="closeAllOverlays(); showLoginOptions(); return false;">Login</a>
+                <a href="#login" onclick="closeAllOverlays(); showLoginOptions(); return false;">Login</a>
             </div>
         </div>
     </header>
@@ -64,8 +60,8 @@
             <img src="./images/backround img/night-market-vendors-selling-traditional-street-food-generated-by-ai.jpg" alt="City Mart Hero Image" class="hero-image">
         </div>
         <div class="hero-cta">
-            <p class="moving-quote">"From cart to doorstep—fast, friendly, flawless."</p>
-            <button class="btn" onclick="showVendorsModal()">Enter Mart</button>
+            <p class="moving-quote">"From cart to doorstepfast, friendly, flawless."</p>
+            <button type="button" class="btn" onclick="closeAllOverlays(); showVendorsModal();">Enter Mart</button>
         </div>
     </section>
 
@@ -75,7 +71,7 @@
                 <div class="featured-text">
                     <h2>Welcome to City Mart</h2>
                     <p>Discover a world of quality products and services tailored for your lifestyle. From fresh groceries to the latest electronics, we bring everything you need right to your doorstep.</p>
-                    <a href="#" class="btn" onclick="showVendorsModal()">Explore Products</a>
+                    <a href="products.html" class="btn" onclick="closeAllOverlays(); showVendorsModal(); return false;">Explore Products</a>
                 </div>
                 <div class="featured-image">
                     <video class="featured-video" src="./images/video/0_Online_Shopping_E_commerce_1080x1080.mp4" autoplay muted loop playsinline></video>

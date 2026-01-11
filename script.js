@@ -2490,21 +2490,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fromInput) fromInput.addEventListener('change', reloader);
     if (toInput) toInput.addEventListener('change', reloader);
 
-    // Populate sub categories based on main category
+    // Populate sub categories based on main category (vendor add product form)
     const mainCatSelect = document.getElementById('vendor-product-main-category');
     const subCatSelect = document.getElementById('vendor-product-sub-category');
     const clothingExtraFields = document.getElementById('vendor-product-clothing-fields');
+
     const subCategoryOptions = {
         clothing: ['shoes', 'shirts', 'pants', 'dresses', 'accessories', 'etc'],
-        // Detailed pet sub-categories
         pet: [
-            'Dogs – Labrador, Beagle, Pug, German Shepherd, Indian Pariah',
-            'Cats – Persian, Siamese, Bengal, Maine Coon',
-            'Birds – Parrots, Budgies, Zebra Finch, Conures, Doves, Macaws (Hyacinth, Hahn’s), Canaries, Sun Conure, Lovebirds, Cockatiels',
-            'Rabbits – Angora, Dutch, Lop',
-            'Fish – Goldfish, Betta, Guppies, Koi',
-            'Hamsters & Guinea Pigs – Popular small pets for kids',
-            'Turtles & Exotic Pets – Red-eared sliders, tortoises',
+            'Dogs  Labrador, Beagle, Pug, German Shepherd, Indian Pariah',
+            'Cats  Persian, Siamese, Bengal, Maine Coon',
+            'Birds  Parrots, Budgies, Zebra Finch, Conures, Doves, Macaws (Hyacinth, Hahns), Canaries, Sun Conure, Lovebirds, Cockatiels',
+            'Rabbits  Angora, Dutch, Lop',
+            'Fish  Goldfish, Betta, Guppies, Koi',
+            'Hamsters & Guinea Pigs  Popular small pets for kids',
+            'Turtles & Exotic Pets  Red-eared sliders, tortoises',
             'etc',
         ],
         food: ['fruits', 'vegetables', 'bakery', 'dairy', 'snacks', 'etc'],
@@ -2514,14 +2514,13 @@ document.addEventListener('DOMContentLoaded', function() {
         services: ['delivery', 'repair', 'cleaning', 'etc'],
     };
 
-    // Species suggestions for pet category (used via datalist on brand field)
     const petSpeciesOptions = [
         // Birds
         'English Budgie', 'Australian Budgie',
-        'Peach-faced Lovebird', 'Fischer’s Lovebird', 'Masked Lovebird',
+        'Peach-faced Lovebird', 'Fischers Lovebird', 'Masked Lovebird',
         'Lutino Cockatiel', 'Pied Cockatiel', 'Grey Cockatiel',
         'Indian Ringneck Parrot', 'African Grey Parrot', 'Sun Conure',
-        'Macaw – Blue & Gold', 'Macaw – Scarlet',
+        'Macaw  Blue & Gold', 'Macaw  Scarlet',
         'Zebra Finch', 'Gouldian Finch',
         'Yellow Canary', 'Red Factor Canary',
         // Dogs
@@ -2534,69 +2533,53 @@ document.addEventListener('DOMContentLoaded', function() {
         'Angora Rabbit', 'Dutch Rabbit', 'Lop Rabbit',
         // Small pets
         'Syrian Hamster', 'Dwarf Hamster',
-        'Guinea Pig – Abyssinian', 'Guinea Pig – American',
+        'Guinea Pig  Abyssinian', 'Guinea Pig  American',
         // Turtles & tortoises
         'Red-eared Slider', 'Indian Star Tortoise',
     ];
 
-    if (mainCatSelect && subCatSelect) {
-        mainCatSelect.addEventListener('change', () => {
-            const val = mainCatSelect.value;
-            subCatSelect.innerHTML = '<option value="">Select sub category</option>';
-            const list = subCategoryOptions[val] || [];
-            list.forEach(sc => {
-                const opt = document.createElement('option');
-                opt.value = sc;
-                opt.textContent = sc; // keep full label for pet subcategories
-                subCatSelect.appendChild(opt);
-            });
+    function applyVendorCategoryState() {
+        if (!mainCatSelect || !subCatSelect) return;
 
-            // Show clothing-specific fields only when Clothing & Lifestyle is selected
-            if (clothingExtraFields) {
-                clothingExtraFields.style.display = val === 'clothing' ? 'block' : 'none';
-            }
-
-            // When main category is Pet, treat brand field as Species/Breed
-            const brandInput = document.getElementById('vendor-product-brand');
-            const speciesList = document.getElementById('vendor-species-list');
-            if (brandInput) {
-                if (val === 'pet') {
-                    brandInput.placeholder = 'Species / Breed (e.g. English Budgie, Labrador)';
-                    if (speciesList) {
-                        speciesList.innerHTML = '';
-                        petSpeciesOptions.forEach(name => {
-                            const opt = document.createElement('option');
-                            opt.value = name;
-                            speciesList.appendChild(opt);
-                        });
-                    }
-                } else {
-                    brandInput.placeholder = 'Brand / Company name';
-                    if (speciesList) {
-                        speciesList.innerHTML = '';
-                    }
-                }
-            }
+        const mainVal = mainCatSelect.value;
+        subCatSelect.innerHTML = '<option value="">Select sub category</option>';
+        const list = subCategoryOptions[mainVal] || [];
+        list.forEach(sc => {
+            const opt = document.createElement('option');
+            opt.value = sc;
+            opt.textContent = sc;
+            subCatSelect.appendChild(opt);
         });
 
-        // Initialize state on first load (in case a value is preselected)
+        // Show clothing-specific fields only when Clothing & Lifestyle is selected
         if (clothingExtraFields) {
-            clothingExtraFields.style.display = mainCatSelect.value === 'clothing' ? 'block' : 'none';
+            clothingExtraFields.style.display = mainVal === 'clothing' ? 'block' : 'none';
         }
 
-        // Also initialize species suggestions if Pet is already selected on load
-        const initialVal = mainCatSelect.value;
+        // When main category is Pet, treat brand field as Species/Breed and populate species list
         const brandInput = document.getElementById('vendor-product-brand');
         const speciesList = document.getElementById('vendor-species-list');
-        if (brandInput && speciesList && initialVal === 'pet') {
-            brandInput.placeholder = 'Species / Breed (e.g. English Budgie, Labrador)';
-            speciesList.innerHTML = '';
-            petSpeciesOptions.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                speciesList.appendChild(opt);
+        if (brandInput && speciesList) {
+            if (mainVal === 'pet') {
+                brandInput.placeholder = 'Species / Breed (e.g. English Budgie, Labrador)';
+                speciesList.innerHTML = '';
+                petSpeciesOptions.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    speciesList.appendChild(opt);
+                });
+            } else {
+                brandInput.placeholder = 'Brand / Company name';
+                speciesList.innerHTML = '';
+            }
+        }
     }
-    }
+
+    if (mainCatSelect && subCatSelect) {
+        mainCatSelect.addEventListener('change', applyVendorCategoryState);
+        subCatSelect.addEventListener('change', applyVendorCategoryState);
+        // Initialize state on first load (in case values are already selected)
+        applyVendorCategoryState();
     }
 });
 
