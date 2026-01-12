@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const crypto = require('crypto');
+const crypto = require('crypto'); 
 const Razorpay = require('razorpay');
 //const nodemailer = require('nodemailer');
 const axios = require('axios');
@@ -398,6 +398,23 @@ app.post('/api/users/request-signup-code', async (req, res) => {
         isVerified: false,
       });
     }
+
+
+// ===== OTP GENERATION (REQUIRED) =====
+const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+// optional but recommended
+const verificationCodeExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+
+const hashedOtp = crypto
+  .createHash('sha256')
+  .update(otp)
+  .digest('hex');
+
+user.verificationCode = hashedOtp;
+user.verificationCodeExpiresAt = verificationCodeExpiresAt;
+user.isVerified = false;
 
     // Send the raw OTP to the user's email only  never include it in API responses
    await sendOTPEmail(email, otp);
