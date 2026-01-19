@@ -1143,6 +1143,21 @@ function updateAuthUI() {
         }
     }
 
+    // Show/hide phone input and reCAPTCHA container based on authMode
+    const phoneInput = document.getElementById('login-phone');
+    const recaptchaContainer = document.getElementById('firebase-recaptcha-container');
+    if (phoneInput) {
+        phoneInput.style.display = authMode === 'signup' ? 'block' : 'none';
+        if (authMode === 'signup') {
+            phoneInput.required = false;
+        } else {
+            phoneInput.required = false;
+        }
+    }
+    if (recaptchaContainer) {
+        recaptchaContainer.style.display = authMode === 'signup' ? 'block' : 'none';
+    }
+
     const titleEl = document.getElementById('auth-modal-title');
     const submitBtn = document.getElementById('auth-submit-button');
     const switchLink = document.querySelector('.auth-switch a');
@@ -2590,6 +2605,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
+
 // Show a professional OTP input dialog instead of using window.prompt
 function askForOtpCode(email, statusEl) {
     return new Promise((resolve, reject) => {
@@ -2688,8 +2705,61 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
+    // Get phone number for Firebase Phone OTP verification
+    const phoneInput = document.getElementById('login-phone');
+    const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!phoneNumber) {
+        showToast('Please enter a phone number.', 'error');
+        return;
+    }
+
+    // Validate phone number format (must start with +)
+    if (!phoneNumber.startsWith('+')) {
+        showToast('Phone number must include country code (e.g., +919876543210).', 'error');
+        return;
+    }
+
     const role = loginContext === 'vendor' ? 'vendor' : 'customer';
 
+    // ============================================================================
+    // STEP 1: Firebase Phone OTP Verification (NEW - runs before email OTP)
+    // ============================================================================
+    try {
+        if (statusEl) statusEl.textContent = 'Sending phone verification code...';
+        
+        // Send phone OTP
+        await sendPhoneOTP(phoneNumber);
+        
+        const phoneOtpMsg = `A verification code has been sent to ${phoneNumber}. Please enter it to continue.`;
+        showToast(phoneOtpMsg, 'success');
+        if (statusEl) statusEl.textContent = phoneOtpMsg;
+
+        // Ask user for phone OTP code
+        let phoneOtpCode;
+        try {
+            phoneOtpCode = await askForPhoneOtpCode(phoneNumber, statusEl);
+        } catch (e) {
+            // User cancelled phone verification
+            if (statusEl) statusEl.textContent = 'Phone verification cancelled.';
+            return;
+        }
+
+        // Verify phone OTP
+        if (statusEl) statusEl.textContent = 'Verifying phone number...';
+        await verifyPhoneOTP(phoneOtpCode);
+        
+        showToast('Phone number verified successfully.', 'success');
+    } catch (error) {
+        const errorMsg = error.message || 'Phone verification failed. Please try again.';
+        showToast(errorMsg, 'error');
+        if (statusEl) statusEl.textContent = errorMsg;
+        return; // Stop signup if phone verification fails
+    }
+
+    // ============================================================================
+    // STEP 2: Email OTP Verification (EXISTING FLOW - continues after phone OTP)
+    // ============================================================================
     // Step 1: request verification code
     const resp = await fetch('/api/users/request-signup-code', {
         method: 'POST',
@@ -3594,6 +3664,21 @@ function updateAuthUI() {
             userMenuDropdown.innerHTML = '';
             userMenuDropdown.classList.remove('open');
         }
+    }
+
+    // Show/hide phone input and reCAPTCHA container based on authMode
+    const phoneInput = document.getElementById('login-phone');
+    const recaptchaContainer = document.getElementById('firebase-recaptcha-container');
+    if (phoneInput) {
+        phoneInput.style.display = authMode === 'signup' ? 'block' : 'none';
+        if (authMode === 'signup') {
+            phoneInput.required = true;
+        } else {
+            phoneInput.required = false;
+        }
+    }
+    if (recaptchaContainer) {
+        recaptchaContainer.style.display = authMode === 'signup' ? 'block' : 'none';
     }
 
     const titleEl = document.getElementById('auth-modal-title');
@@ -4502,16 +4587,17 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-  const role = loginContext === 'vendor' ? 'vendor' : 'customer';
+    const phoneInput = document.getElementById('login-phone');
+    const phone = phoneInput ? phoneInput.value.trim() : '';
 
-  // hi
+    const role = loginContext === 'vendor' ? 'vendor' : 'customer';
 
-  // Step 1: request verification code
-  const resp = await fetch(API_BASE + '/api/users/request-signup-code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password, role }),
-  });
+    // Step 1: request verification code
+    const resp = await fetch(API_BASE + '/api/users/request-signup-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, role, phone }),
+    });
 
     const data = await resp.json();
 
