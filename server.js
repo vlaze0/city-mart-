@@ -43,10 +43,18 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Razorpay client (credentials are read from environment variables)
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize only if credentials are provided (for development mode)
+let razorpayInstance = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && 
+    process.env.RAZORPAY_KEY_ID !== 'your_razorpay_key_id') {
+  razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+  console.log('Razorpay payment gateway initialized');
+} else {
+  console.warn('⚠️  Razorpay credentials not configured. Payment features will be disabled.');
+}
 
 // Nodemailer SMTP transporter for sending OTP emails
 // This is configured via environment variables so that the same code
