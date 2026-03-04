@@ -16,7 +16,7 @@ if "%ERRORLEVEL%"=="0" (
 )
 
 REM Start the server
-echo Starting server on port 3000...
+echo Starting server on port 4000...
 echo.
 node server.js
 

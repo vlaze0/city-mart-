@@ -2776,39 +2776,42 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    // Production behaviour: do NOT display the OTP; only show a generic message
-    const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
-    showToast(infoMsg, 'success');
-    if (statusEl) statusEl.textContent = infoMsg;
+    // If server auto-verified (dev mode, no email service), skip OTP and go straight to login
+    if (data.autoVerified) {
+        showToast('Account created successfully. Logging you in...', 'success');
+    } else {
+        // Production behaviour: do NOT display the OTP; only show a generic message
+        const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
+        showToast(infoMsg, 'success');
+        if (statusEl) statusEl.textContent = infoMsg;
 
-    // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
-    let userCode;
-    try {
-        userCode = await askForOtpCode(email, statusEl);
-    } catch (e) {
-        // User cancelled
-        return;
+        // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
+        let userCode;
+        try {
+            userCode = await askForOtpCode(email, statusEl);
+        } catch (e) {
+            // User cancelled
+            return;
+        }
+
+        // Step 2: verify the code
+        const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code: userCode.trim() }),
+        });
+
+        const verifyData = await verifyResp.json();
+
+        if (!verifyResp.ok) {
+            const msg = verifyData && verifyData.message ? verifyData.message : 'Verification failed';
+            showToast(msg, 'error');
+            if (statusEl) statusEl.textContent = msg;
+            return;
+        }
+
+        showToast('Account verified successfully. Logging you in...', 'success');
     }
-
-    // hi
-
-    // Step 2: verify the code
-    const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: userCode.trim() }),
-    });
-
-    const verifyData = await verifyResp.json();
-
-    if (!verifyResp.ok) {
-        const msg = verifyData && verifyData.message ? verifyData.message : 'Verification failed';
-        showToast(msg, 'error');
-        if (statusEl) statusEl.textContent = msg;
-        return;
-    }
-
-    showToast('Account verified successfully. Logging you in...', 'success');
 
     // Auto-login after successful verification
     const loginResp = await fetch(API_BASE + '/api/users/login', {
@@ -4608,39 +4611,42 @@ async function handleSignupFlow(email, password, statusEl) {
         return;
     }
 
-    // Production behaviour: do NOT display the OTP; only show a generic message
-    const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
-    showToast(infoMsg, 'success');
-    if (statusEl) statusEl.textContent = infoMsg;
+    // If server auto-verified (dev mode, no email service), skip OTP and go straight to login
+    if (data.autoVerified) {
+        showToast('Account created successfully. Logging you in...', 'success');
+    } else {
+        // Production behaviour: do NOT display the OTP; only show a generic message
+        const infoMsg = 'A one-time verification code has been sent to your email address. Please check your inbox and enter the code to continue.';
+        showToast(infoMsg, 'success');
+        if (statusEl) statusEl.textContent = infoMsg;
 
-    // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
-    let userCode;
-    try {
-        userCode = await askForOtpCode(email, statusEl);
-    } catch (e) {
-        // User cancelled
-        return;
+        // Ask the user for the code they received via email using a dedicated dialog (no OTP is ever shown by the site)
+        let userCode;
+        try {
+            userCode = await askForOtpCode(email, statusEl);
+        } catch (e) {
+            // User cancelled
+            return;
+        }
+
+        // Step 2: verify the code
+        const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code: userCode.trim() }),
+        });
+
+        const verifyData = await verifyResp.json();
+
+        if (!verifyResp.ok) {
+            const msg = verifyData && verifyData.message ? verifyData.message : 'Verification failed';
+            showToast(msg, 'error');
+            if (statusEl) statusEl.textContent = msg;
+            return;
+        }
+
+        showToast('Account verified successfully. Logging you in...', 'success');
     }
-
-    // hi
-
-    // Step 2: verify the code
-    const verifyResp = await fetch(API_BASE + '/api/users/verify-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: userCode.trim() }),
-    });
-
-    const verifyData = await verifyResp.json();
-
-    if (!verifyResp.ok) {
-        const msg = verifyData && verifyData.message ? verifyData.message : 'Verification failed';
-        showToast(msg, 'error');
-        if (statusEl) statusEl.textContent = msg;
-        return;
-    }
-
-    showToast('Account verified successfully. Logging you in...', 'success');
 
     // Auto-login after successful verification
     const loginResp = await fetch(API_BASE + '/api/users/login', {

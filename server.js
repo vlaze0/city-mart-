@@ -405,13 +405,24 @@ app.post('/api/users/request-signup-code', async (req, res) => {
         verificationCodeExpiresAt,
         isVerified: false,
       });
-	  
-	  await sendOTPEmail(email, verificationCode );
-
-
-    await user.save();
     }
 
+    // If email service is not configured, auto-verify the user (dev mode)
+    const isEmailConfigured = process.env.BREVO_API_KEY && process.env.BREVO_API_KEY !== 'your_brevo_api_key';
+
+    if (!isEmailConfigured) {
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      user.verificationCodeExpiresAt = undefined;
+      await user.save();
+      return res.status(201).json({
+        message: 'Account created successfully (email verification skipped in dev mode).',
+        autoVerified: true,
+      });
+    }
+
+    await user.save();
+    await sendOTPEmail(email, verificationCode);
 
     res.status(201).json({
       message: 'Verification code sent to your email. Please enter it to complete signup.',
