@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Mart - Vendor Dashboard</title>
+<link rel="stylesheet" href="styles.css?v=3">
+    <script src="script.js"></script>
+</head>
+<body class="vendor-dashboard-page">
+    <header>
+        <div class="container">
+            <div class="navbar-left">
+                <a href="index.html" class="navbar-logo-link">
+<img src="./images/logo.svg" onerror="this.onerror=null;this.src='./images/logo.png';" alt="CityMart" class="navbar-logo">
+                </a>
+            </div>
+            <div class="global-search-wrapper">
+                <form class="global-search-form" onsubmit="return handleGlobalSearchSubmit(event)">
+                    <input type="text" id="global-search-input" class="global-search-input" placeholder="Search products (name, brand, category...)" />
+                    <button type="submit" class="global-search-button">Search</button>
+                </form>
+            </div>
+        <div class="navbar-right">
+            <nav>
+                <ul>
+                    <li><a href="index.html#home" onclick="closeAllOverlays()">Home</a></li>
+                    <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
+                    <li><a href="profile.html" onclick="closeAllOverlays()">Profile</a></li>
+                    <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
+                    <li class="user-menu">
+                        <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
+                        <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
+                    </li>
+                </ul>
+            </nav>
+            <div class="cart-icon" onclick="showCartModal()">
+                🛒
+                <span id="cart-count">0</span>
+            </div>
+        </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="mobile-menu">
+                <a href="index.html#home" onclick="closeAllOverlays()">Home</a>
+                <a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a>
+                <a href="profile.html" onclick="closeAllOverlays()">Profile</a>
+                <a href="index.html#contact" onclick="closeAllOverlays()">Contact</a>
+                <a href="#" onclick="closeAllOverlays(); showLoginOptions(); return false;">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="vendor-shell">
+        <aside class="vendor-sidebar">
+            <div class="vendor-logo-block">
+                <div class="vendor-logo-circle"></div>
+                <span class="vendor-logo-text" id="vendor-shop-name">MyShop</span>
+            </div>
+            <nav class="vendor-nav">
+                <button class="vendor-nav-item">Home</button>
+                <button class="vendor-nav-item vendor-nav-item-active">Dashboard</button>
+                <button class="vendor-nav-item">Products</button>
+                <button class="vendor-nav-item">Customers</button>
+                <button class="vendor-nav-item">Transactions</button>
+                <button class="vendor-nav-item">Settings</button>
+                <button class="vendor-nav-item vendor-nav-item-muted">Sign out</button>
+            </nav>
+        </aside>
+
+        <section class="vendor-main">
+            <header class="vendor-main-header">
+                <div>
+                    <h2>Hello, <span id="vendor-main-name">Vendor</span></h2>
+                    <p class="vendor-subtitle">Here is the overview of your shop today.</p>
+                </div>
+                <div class="vendor-main-actions">
+                    <button type="button" class="vendor-circle-btn">🔍</button>
+                    <button type="button" class="vendor-circle-btn">🔔</button>
+                    <div class="vendor-header-avatar"></div>
+                </div>
+            </header>
+
+            <!-- Top KPI cards -->
+            <section class="vendor-kpi-row">
+                <div class="vendor-kpi-card">
+                    <p class="vendor-kpi-label">Products</p>
+                    <p id="vendor-kpi-products" class="vendor-kpi-value">0</p>
+                    <p class="vendor-kpi-foot">Total items live</p>
+                </div>
+                <div class="vendor-kpi-card">
+                    <p class="vendor-kpi-label">Income</p>
+                    <p id="vendor-kpi-income" class="vendor-kpi-value">₹0</p>
+                    <p class="vendor-kpi-foot">Today (demo)</p>
+                </div>
+                <div class="vendor-kpi-card">
+                    <p class="vendor-kpi-label">Orders</p>
+                    <p id="vendor-kpi-orders" class="vendor-kpi-value">0</p>
+                    <p class="vendor-kpi-foot">Last 7 days (demo)</p>
+                </div>
+                <div class="vendor-kpi-card">
+                    <p class="vendor-kpi-label">Visits</p>
+                    <p id="vendor-kpi-visits" class="vendor-kpi-value">0</p>
+                    <p class="vendor-kpi-foot">Today (demo)</p>
+                </div>
+            </section>
+
+            <section class="vendor-grid-main">
+                <!-- Left column: profile + add/update product form -->
+                <div class="vendor-column-left">
+                    <div class="vendor-profile-card" id="vendor-section-dashboard">
+                        <div class="vendor-profile-header">
+                            <div class="vendor-profile-avatar"></div>
+                            <div>
+                                <h3 id="vendor-profile-name">-</h3>
+                                <p class="vendor-status-pill">Active vendor</p>
+                            </div>
+                        </div>
+                        <div class="vendor-profile-fields">
+                            <p><span class="vendor-label">Shop name</span><span id="vendor-profile-shop-name">MyShop</span></p>
+                            <p><span class="vendor-label">Email</span><span id="vendor-profile-email">-</span></p>
+                            <p><span class="vendor-label">Mobile</span><span id="vendor-profile-phone">Not provided</span></p>
+                            <p><span class="vendor-label">Address</span><span id="vendor-profile-address">Not provided</span></p>
+                        </div>
+                    </div>
+
+                    <div class="vendor-card" id="vendor-section-products">
+                        <div class="vendor-card-head">
+                            <h3>Add / Update product</h3>
+                            <p class="vendor-card-sub">Fill the details below and save to publish your product.</p>
+                        </div>
+                        <!-- Reuse the existing vendor product form so script.js logic works as-is -->
+                        <form id="vendor-product-form" class="vendor-product-form">
+                        <div class="vendor-product-row">
+                            <input type="text" id="vendor-product-name" placeholder="Product name" required>
+                            <input type="number" step="0.01" id="vendor-product-price" placeholder="Price (₹)" required>
+                        </div>
+
+                        <div class="vendor-product-row">
+                            <select id="vendor-product-main-category" required>
+                                <option value="">Select main category</option>
+                                <option value="pet">Pet</option>
+                                <option value="food">Food &amp; Groceries</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="household">Household</option>
+                                <option value="clothing">Clothing &amp; Lifestyle</option>
+                                <option value="stationery">Stationery &amp; Education</option>
+                                <option value="services">Local Services</option>
+                            </select>
+                            <select id="vendor-product-sub-category" required>
+                                <option value="">Select sub category</option>
+                            </select>
+                        </div>
+
+                        <div id="vendor-product-clothing-fields" class="vendor-product-extra" style="display: none;">
+                            <h3>Size options</h3>
+                            <p class="vendor-product-hint">Select all sizes you want to offer. Customers will choose a size while buying.</p>
+                            <div class="vendor-product-row vendor-size-row" id="vendor-size-row-clothing">
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="S"> S</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="M"> M</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="L"> L</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="XL"> XL</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="XXL"> XXL</label>
+                            </div>
+                            <div class="vendor-product-row vendor-size-row" id="vendor-size-row-shoes" style="display:none;">
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="4"> 4</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="5"> 5</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="6"> 6</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="7"> 7</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="8"> 8</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="9"> 9</label>
+                                <label class="vendor-size-checkbox"><input type="checkbox" value="10"> 10</label>
+                            </div>
+                        </div>
+
+                        <div class="vendor-product-row">
+                            <input type="text" id="vendor-product-brand" placeholder="Brand / Company name" list="vendor-species-list" required>
+                            <input type="text" id="vendor-product-delivery-time" placeholder="Delivery time (e.g. 3-5 days)" required>
+                        </div>
+
+                        <textarea id="vendor-product-description" placeholder="Product description" required></textarea>
+                        <input type="text" id="vendor-product-discount" placeholder="Discount (optional)">
+                        <textarea id="vendor-product-features" placeholder="Key features (optional)"></textarea>
+
+                        <label class="vendor-product-file-label" for="vendor-product-image">Upload product images (up to 4)</label>
+                        <input type="file" id="vendor-product-image" accept="image/*">
+
+                        <!-- Species suggestions when category = Pet -->
+                        <datalist id="vendor-species-list"></datalist>
+
+                        <button type="submit" class="vendor-product-submit">Save Product</button>
+                    </form>
+                    </div>
+                </div>
+
+                <!-- Right column: last orders + products list -->
+                <div class="vendor-column-right">
+                    <div class="vendor-card vendor-last-orders-card">
+                        <div class="vendor-card-head vendor-card-head-row">
+                            <div>
+                                <h3>Last orders</h3>
+                                <p class="vendor-card-sub">Recent orders that include your products.</p>
+                            </div>
+                            <span class="vendor-last-orders-viewall">View all</span>
+                        </div>
+                        <div id="vendor-last-orders-loading" class="vendor-card-loading">Loading orders...</div>
+                        <div id="vendor-last-orders-error" class="vendor-card-empty" style="display:none; color:#b91c1c;"></div>
+                        <div id="vendor-last-orders-empty" class="vendor-card-empty" style="display:none;">No recent orders yet.</div>
+                        <ul id="vendor-last-orders-list" class="vendor-last-orders-list"></ul>
+                    </div>
+
+                    <div class="vendor-card">
+                        <div class="vendor-card-head vendor-card-head-row">
+                            <div>
+                                <h3>My products</h3>
+                                <p class="vendor-card-sub">Manage all items you have uploaded.</p>
+                            </div>
+                        </div>
+                        <div id="vendor-products-loading" class="vendor-card-loading">Loading your products...</div>
+                        <div id="vendor-products-empty" class="vendor-card-empty" style="display:none;">You have not added any products yet.</div>
+                        <div id="vendor-products-list" class="vendor-products-grid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Extra sections for sidebar navigation -->
+            <section class="vendor-extra-sections">
+                <div class="vendor-card" id="vendor-section-customers">
+                    <div class="vendor-card-head">
+                        <h3>Customers</h3>
+                        <p class="vendor-card-sub">Overview of shoppers who bought your products (summary only for now).</p>
+                    </div>
+                    <p style="font-size:0.85rem; color:#4b5563;">Use the Admin &gt; Customers page for full customer analytics. This block can later be wired to show only customers of this vendor.</p>
+                </div>
+
+                <div class="vendor-card" id="vendor-section-transactions">
+                    <div class="vendor-card-head">
+                        <h3>Transactions</h3>
+                        <p class="vendor-card-sub">See your recent orders and payouts.</p>
+                    </div>
+                    <p style="font-size:0.85rem; color:#4b5563;">The "Last orders" card on the right already shows the latest orders containing your products. This section can later be extended with payout history.</p>
+                </div>
+
+                <div class="vendor-card" id="vendor-section-settings">
+                    <div class="vendor-card-head">
+                        <h3>Settings</h3>
+                        <p class="vendor-card-sub">Basic vendor profile settings (name, email, phone).</p>
+                    </div>
+                    <p style="font-size:0.85rem; color:#4b5563;">Profile details are currently loaded from your account. To change them, update your main account information (e.g. via profile page or backend).</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 City Mart. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Fill the vendor profile info in the header card
+        function renderVendorProfile(vendor) {
+            const nameEl = document.getElementById('vendor-profile-name');
+            const emailEl = document.getElementById('vendor-profile-email');
+            const phoneEl = document.getElementById('vendor-profile-phone');
+            const shopNameLogoEl = document.getElementById('vendor-shop-name');
+            const shopNameFieldEl = document.getElementById('vendor-profile-shop-name');
+            const addressEl = document.getElementById('vendor-profile-address');
+
+            const displayName = vendor.shopName || vendor.username || '-';
+            const email = vendor.email || '-';
+            const phone = vendor.phone || 'Not provided';
+            const address = vendor.address || vendor.shopAddress || 'Not provided';
+
+            if (nameEl) nameEl.textContent = displayName;
+            if (shopNameLogoEl) shopNameLogoEl.textContent = displayName;
+            if (shopNameFieldEl) shopNameFieldEl.textContent = displayName;
+            if (emailEl) emailEl.textContent = email;
+            if (phoneEl) phoneEl.textContent = phone;
+            if (addressEl) addressEl.textContent = address;
+        }
+
+        // Render products list for the vendor
+        function renderVendorProducts(products) {
+            const loadingEl = document.getElementById('vendor-products-loading');
+            const emptyEl = document.getElementById('vendor-products-empty');
+            const listEl = document.getElementById('vendor-products-list');
+
+            if (!listEl) return;
+
+            loadingEl.style.display = 'none';
+            listEl.innerHTML = '';
+
+            if (!products.length) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+
+                const img = document.createElement('img');
+                img.src = product.image || './images/placeholder.jpg';
+                img.alt = product.name;
+                img.onerror = function () { this.src = './images/placeholder.jpg'; };
+
+                const info = document.createElement('div');
+                info.className = 'product-info';
+
+                const title = document.createElement('h3');
+                title.textContent = product.name;
+                info.appendChild(title);
+
+                if (product.brand) {
+                    const brand = document.createElement('p');
+                    brand.className = 'brand';
+                    brand.textContent = `Brand: ${product.brand}`;
+                    info.appendChild(brand);
+                }
+                if (product.subCategory) {
+                    const subCat = document.createElement('p');
+                    subCat.className = 'sub-category';
+                    subCat.textContent = `Category: ${product.subCategory}`;
+                    info.appendChild(subCat);
+                }
+
+                const price = document.createElement('p');
+                price.className = 'price';
+                price.textContent = `₹${Number(product.price || 0).toFixed(2)}`;
+                info.appendChild(price);
+
+                if (product.discount) {
+                    const disc = document.createElement('p');
+                    disc.className = 'discount';
+                    disc.textContent = product.discount;
+                    info.appendChild(disc);
+                }
+                if (product.features) {
+                    const feat = document.createElement('p');
+                    feat.className = 'features';
+                    feat.textContent = product.features;
+                    info.appendChild(feat);
+                }
+                if (product.deliveryTime) {
+                    const del = document.createElement('p');
+                    del.className = 'delivery-time';
+                    del.textContent = `Delivery: ${product.deliveryTime}`;
+                    info.appendChild(del);
+                }
+
+                const actions = document.createElement('div');
+                actions.className = 'vendor-product-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'vendor-action-btn vendor-action-edit';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = function () {
+                    const nameInput = document.getElementById('vendor-product-name');
+                    const priceInput = document.getElementById('vendor-product-price');
+                    const mainCategoryInput = document.getElementById('vendor-product-main-category');
+                    const subCategoryInput = document.getElementById('vendor-product-sub-category');
+                    const brandInput = document.getElementById('vendor-product-brand');
+                    const descriptionInput = document.getElementById('vendor-product-description');
+                    const discountInput = document.getElementById('vendor-product-discount');
+                    const deliveryTimeInput = document.getElementById('vendor-product-delivery-time');
+                    const featuresInput = document.getElementById('vendor-product-features');
+
+                    if (nameInput) nameInput.value = product.name || '';
+                    if (priceInput) priceInput.value = product.price != null ? product.price : '';
+                    if (mainCategoryInput) mainCategoryInput.value = product.mainCategory || '';
+                    if (subCategoryInput) {
+                        const event = new Event('change');
+                        mainCategoryInput && mainCategoryInput.dispatchEvent(event);
+                        subCategoryInput.value = product.subCategory || '';
+                    }
+                    if (brandInput) brandInput.value = product.brand || '';
+                    if (descriptionInput) descriptionInput.value = product.description || '';
+                    if (discountInput) discountInput.value = product.discount || '';
+                    if (deliveryTimeInput) deliveryTimeInput.value = product.deliveryTime || '';
+                    if (featuresInput) featuresInput.value = product.features || '';
+
+                    window.editingProductId = product._id;
+                    if (document.querySelector('.vendor-product-submit')) {
+                        document.querySelector('.vendor-product-submit').textContent = 'Update Product';
+                    }
+
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'vendor-action-btn vendor-action-delete';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = function () { deleteVendorProduct(product._id); };
+
+                // Stock status buttons
+                const outBtn = document.createElement('button');
+                outBtn.type = 'button';
+                outBtn.className = 'vendor-action-btn vendor-action-stock';
+                outBtn.textContent = 'Out of stock';
+                outBtn.onclick = function () {
+                    setProductStockStatus(product, false);
+                };
+
+                const inBtn = document.createElement('button');
+                inBtn.type = 'button';
+                inBtn.className = 'vendor-action-btn vendor-action-instock';
+                inBtn.textContent = 'In stock';
+                inBtn.onclick = function () {
+                    setProductStockStatus(product, true);
+                };
+
+                // Reflect current state (disable the active one)
+                const isOutOfStock = product.inStock === false;
+                if (isOutOfStock) {
+                    outBtn.disabled = true;
+                } else {
+                    inBtn.disabled = true;
+                }
+
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+                actions.appendChild(outBtn);
+                actions.appendChild(inBtn);
+                info.appendChild(actions);
+
+                card.appendChild(img);
+                card.appendChild(info);
+
+                listEl.appendChild(card);
+            });
+        }
+
+        function renderVendorLastOrders(orders) {
+            const loadingEl = document.getElementById('vendor-last-orders-loading');
+            const errorEl = document.getElementById('vendor-last-orders-error');
+            const emptyEl = document.getElementById('vendor-last-orders-empty');
+            const listEl = document.getElementById('vendor-last-orders-list');
+
+            if (!loadingEl || !errorEl || !emptyEl || !listEl) return;
+
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            listEl.innerHTML = '';
+
+            if (!orders.length) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            orders.slice(0, 4).forEach(order => {
+                const li = document.createElement('li');
+                li.className = 'vendor-last-order-item';
+                const customerName = order.userId && (order.userId.username || order.userId.email) || 'Customer';
+                const total = Number(order.totalAmount || 0).toFixed(2);
+                const status = order.status || 'pending';
+
+                const actionHtml = status === 'pending'
+                    ? `<button type="button" class="vlo-confirm-btn" onclick="confirmVendorOrder('${order._id}')">Confirm</button>`
+                    : '';
+
+                li.innerHTML = `
+                    <div class="vlo-main">
+                        <div class="vlo-avatar"></div>
+                        <div class="vlo-text">
+                            <p class="vlo-name">${customerName}</p>
+                            <p class="vlo-meta">Items: ${(order.products || []).length}</p>
+                        </div>
+                    </div>
+                    <div class="vlo-right">
+                        <p class="vlo-amount">₹${total}</p>
+                        <span class="vlo-status vlo-status-${status}">${status}</span>
+                        ${actionHtml}
+                    </div>
+                `;
+
+                listEl.appendChild(li);
+            });
+        }
+
+        async function confirmVendorOrder(orderId) {
+            if (!orderId) return;
+            if (!confirm('Confirm this order for your products?')) return;
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/vendor/orders/' + orderId + '/confirm', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to confirm order.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast('Order confirmed successfully.', 'success');
+                }
+
+                // Refresh the last orders list after confirmation
+                if (window.currentUser) {
+                    const vid = window.currentUser.id || window.currentUser._id;
+                    if (vid) {
+                        loadVendorLastOrders(vid);
+                    }
+                }
+            } catch (err) {
+                console.error('Error confirming vendor order:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while confirming order.', 'error');
+                }
+            }
+        }
+
+        async function loadVendorLastOrders(vendorId) {
+            const loadingEl = document.getElementById('vendor-last-orders-loading');
+            const errorEl = document.getElementById('vendor-last-orders-error');
+            const emptyEl = document.getElementById('vendor-last-orders-empty');
+            const listEl = document.getElementById('vendor-last-orders-list');
+
+            if (!loadingEl || !errorEl || !emptyEl || !listEl) return;
+
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = '';
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/orders', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+
+                if (resp.status === 401 || resp.status === 403) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Login as vendor to see your orders.';
+                    return;
+                }
+
+                if (!resp.ok) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Failed to load orders.';
+                    return;
+                }
+
+                let orders = await resp.json();
+                if (!Array.isArray(orders)) orders = [];
+
+                const vid = String(vendorId);
+                orders = orders.filter(o => (o.products || []).some(p => {
+                    const prod = p.productId;
+                    return prod && prod.vendorId && String(prod.vendorId) === vid;
+                }));
+
+                orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+                renderVendorLastOrders(orders);
+            } catch (err) {
+                console.error('Error loading vendor last orders:', err);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'Network error while loading orders.';
+            }
+        }
+
+        // Fetch and render the current vendor's profile and products
+        async function refreshVendorProductsList() {
+            const loadingEl = document.getElementById('vendor-products-loading');
+            const emptyEl = document.getElementById('vendor-products-empty');
+            const listEl = document.getElementById('vendor-products-list');
+
+            if (!listEl) return;
+
+            loadingEl.style.display = 'block';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = '';
+
+            try {
+                // If opened as file://, hit localhost explicitly
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/vendor/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+
+                if (resp.status === 401 || resp.status === 403) {
+                    loadingEl.textContent = 'Please login as a vendor to view your products.';
+                    return;
+                }
+
+                if (!resp.ok) {
+                    loadingEl.textContent = 'Failed to load profile/products. Please try again.';
+                    return;
+                }
+
+                const data = await resp.json();
+                loadingEl.style.display = 'none';
+
+                if (data.vendor) {
+                    renderVendorProfile(data.vendor);
+                    const mainNameEl = document.getElementById('vendor-main-name');
+                    if (mainNameEl) {
+                        mainNameEl.textContent = data.vendor.shopName || data.vendor.username || 'Vendor';
+                    }
+                }
+
+                const products = Array.isArray(data.products) ? data.products : [];
+                renderVendorProducts(products);
+
+                if (data.vendor && (data.vendor._id || data.vendor.id)) {
+                    const vid = data.vendor._id || data.vendor.id;
+                    loadVendorLastOrders(vid);
+                }
+            } catch (err) {
+                console.error('Error loading vendor products:', err);
+                loadingEl.textContent = 'Error loading products. Please try again.';
+            }
+        }
+
+        async function setProductStockStatus(product, inStock) {
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+                // Mirror the fields used in handleVendorProductSubmit so the backend
+                // receives a complete product payload (avoids NaN price errors).
+                const formData = new FormData();
+                if (product.name != null) formData.append('name', product.name);
+                if (product.price != null) formData.append('price', String(product.price));
+                if (product.mainCategory) formData.append('mainCategory', product.mainCategory);
+                if (product.subCategory) formData.append('subCategory', product.subCategory);
+                if (product.brand) formData.append('brand', product.brand);
+                if (product.category) formData.append('category', product.category);
+                if (product.description) formData.append('description', product.description);
+                if (product.discount) formData.append('discount', product.discount);
+                if (product.features) formData.append('features', product.features);
+                if (product.deliveryTime) formData.append('deliveryTime', product.deliveryTime);
+                formData.append('inStock', String(inStock));
+
+                const resp = await fetch(apiBase + '/api/products/' + product._id, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                    body: formData,
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to update stock status.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast(inStock ? 'Product marked as in stock.' : 'Product marked as out of stock.', 'success');
+                }
+
+                // Refresh the list so button label and badge update
+                refreshVendorProductsList();
+            } catch (err) {
+                console.error('Error updating stock status:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while updating stock.', 'error');
+                }
+            }
+        }
+
+        async function deleteVendorProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) return;
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/products/' + productId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to delete product.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast('Product deleted successfully.', 'success');
+                }
+                refreshVendorProductsList();
+            } catch (err) {
+                console.error('Error deleting product:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while deleting product.', 'error');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Require vendor login; if not logged in as vendor, send back to home.
+            if (!window.currentUser || window.currentUser.role !== 'vendor') {
+                // Try re-reading from localStorage (in case script.js hasn't yet)
+                try {
+                    const storedToken = localStorage.getItem('citymart_token');
+                    const storedUser = localStorage.getItem('citymart_user');
+                    if (storedToken && storedUser) {
+                        window.authToken = storedToken;
+                        window.currentUser = JSON.parse(storedUser);
+                    }
+                } catch (e) {
+                    console.warn('Could not read auth info from localStorage', e);
+                }
+            }
+
+            if (!window.currentUser || window.currentUser.role !== 'vendor') {
+                alert('Please login as a vendor to access the vendor dashboard.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            refreshVendorProductsList();
+            if (typeof initVendorSizeOptions === 'function') {
+                initVendorSizeOptions();
+            }
+
+            // Sidebar nav interactions
+            const navButtons = document.querySelectorAll('.vendor-nav-item');
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const label = btn.textContent.trim().toLowerCase();
+                    navButtons.forEach(b => b.classList.remove('vendor-nav-item-active'));
+                    if (!btn.classList.contains('vendor-nav-item-muted')) {
+                        btn.classList.add('vendor-nav-item-active');
+                    }
+
+                    if (label === 'home') {
+                        window.location.href = 'index.html';
+                    } else if (label === 'dashboard') {
+                        const el = document.getElementById('vendor-section-dashboard');
+                        if (el && el.scrollIntoView) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    } else if (label === 'products') {
+                        const el = document.getElementById('vendor-section-products');
+                        if (el && el.scrollIntoView) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (label === 'customers') {
+                        const el = document.getElementById('vendor-section-customers');
+                        if (el && el.scrollIntoView) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (label === 'transactions') {
+                        const el = document.getElementById('vendor-section-transactions');
+                        if (el && el.scrollIntoView) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (label === 'settings') {
+                        const el = document.getElementById('vendor-section-settings');
+                        if (el && el.scrollIntoView) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (label === 'sign out') {
+                        if (typeof logout === 'function') {
+                            logout();
+                        } else {
+                            try {
+                                localStorage.removeItem('citymart_token');
+                                localStorage.removeItem('citymart_user');
+                            } catch (e) {}
+                            window.location.href = 'index.html';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Login Options Modal -->
+    <div id="login-options-modal" class="login-options-modal">
+        <div class="login-options-content">
+            <span class="close" onclick="closeLoginOptionsModal()">&times;</span>
+            <h2>Select Login Type</h2>
+            <div class="login-options">
+                <button type="button" onclick="startLoginAs('customer')">Customer Login</button>
+                <button type="button" onclick="startLoginAs('vendor')">Vendor Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-content">
+            <span class="close" onclick="closeAuthModal()">&times;</span>
+            <h2 id="auth-modal-title">Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Name" required>
+                <input type="text" id="login-email" placeholder="Email or phone" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" id="auth-submit-button">Login</button>
+            </form>
+            <p id="login-status"></p>
+            <p class="auth-switch">
+                <a href="#" onclick="switchAuthMode(event)">New user? Sign up</a>
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>

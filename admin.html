@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Mart - Admin Dashboard</title>
+<link rel="stylesheet" href="styles.css?v=3">
+    <script src="script.js"></script>
+</head>
+<body class="admin-page">
+    <header>
+        <div class="container">
+            <div class="navbar-left">
+                <a href="index.html" class="navbar-logo-link">
+<img src="./images/logo.svg" onerror="this.onerror=null;this.src='./images/logo.png';" alt="CityMart" class="navbar-logo">
+                </a>
+            </div>
+            <div class="global-search-wrapper">
+                <form class="global-search-form" onsubmit="return handleGlobalSearchSubmit(event)">
+                    <input type="text" id="global-search-input" class="global-search-input" placeholder="Search products (name, brand, category...)" />
+                    <button type="submit" class="global-search-button">Search</button>
+                </form>
+            </div>
+            <div class="navbar-right">
+                <nav>
+                    <ul>
+                        <li><a href="index.html" onclick="closeAllOverlays()">Home</a></li>
+                        <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
+                        <li><a href="#contact" onclick="closeAllOverlays()">Contact</a></li>
+                        <li class="user-menu">
+                            <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
+                            <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="cart-icon" onclick="showCartModal()">
+                    🛒
+                    <span id="cart-count">0</span>
+                </div>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="mobile-menu">
+                <a href="index.html" onclick="closeAllOverlays()">Home</a>
+                <a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a>
+                <a href="#contact" onclick="closeAllOverlays()">Contact</a>
+                <a href="#" class="login-btn" onclick="closeAllOverlays(); showLoginOptions(); return false;">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-sidebar-logo">
+                    <span class="admin-logo-dot"></span>
+                    <span class="admin-logo-dot admin-logo-dot-second"></span>
+                </div>
+                <div class="admin-sidebar-title">
+                    <h2>City Mart</h2>
+                    <p>Operations Panel</p>
+                </div>
+            </div>
+
+            <nav class="admin-sidebar-nav">
+                <p class="admin-sidebar-section">Overview</p>
+                <a href="admin.html" class="active">
+                    <span class="admin-nav-icon">🏠</span>
+                    <span class="admin-nav-label">Dashboard</span>
+                </a>
+                <a href="#admin-orders-table">
+                    <span class="admin-nav-icon">📦</span>
+                    <span class="admin-nav-label">Orders</span>
+                </a>
+                <a href="#admin-customers-section">
+                    <span class="admin-nav-icon">👥</span>
+                    <span class="admin-nav-label">Customers</span>
+                </a>
+                <a href="#admin-users-section">
+                    <span class="admin-nav-icon">🔐</span>
+                    <span class="admin-nav-label">Users &amp; Access</span>
+                </a>
+                <a href="#admin-reviews-section">
+                    <span class="admin-nav-icon">⭐</span>
+                    <span class="admin-nav-label">Reviews</span>
+                </a>
+                <a href="products.html">
+                    <span class="admin-nav-icon">🛍️</span>
+                    <span class="admin-nav-label">Products</span>
+                </a>
+                <a href="vendor.html">
+                    <span class="admin-nav-icon">🏪</span>
+                    <span class="admin-nav-label">Vendors</span>
+                </a>
+
+                <p class="admin-sidebar-section">Insights</p>
+                <a href="#vendor-stats-table">
+                    <span class="admin-nav-icon">📊</span>
+                    <span class="admin-nav-label">Vendor Performance</span>
+                </a>
+
+                <p class="admin-sidebar-section">Account</p>
+                <button type="button" class="admin-sidebar-logout" onclick="logout()">Logout</button>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-main-topbar">
+                <div class="admin-main-topbar-left">
+                    <h1>Orders</h1>
+                    <p>Monitor customer orders and vendor performance in one place.</p>
+                </div>
+                <div class="admin-main-topbar-right">
+                    <button type="button" class="admin-topbar-btn secondary" onclick="loadAdminOrders()">Refresh</button>
+                    <button type="button" class="admin-topbar-btn primary" onclick="exportOrdersCsv()">Export Orders</button>
+                </div>
+            </div>
+
+            <div class="admin-main-tabs">
+                <button type="button" class="admin-tab admin-tab-active" data-target="#admin-orders-table">Orders</button>
+                <button type="button" class="admin-tab" data-target="#admin-customers-section">Customers</button>
+                <button type="button" class="admin-tab" data-target="#admin-users-section">Users &amp; Access</button>
+                <button type="button" class="admin-tab" data-target="#admin-reviews-section">Reviews</button>
+                <button type="button" class="admin-tab" data-target="#vendor-stats-table">Vendors</button>
+            </div>
+
+            <section class="products admin-products-section">
+                <div class="container">
+                    <h2>Admin Dashboard - Orders</h2>
+                    <p class="tagline">View and confirm all customer orders.</p>
+
+            <!-- Summary cards -->
+            <div class="admin-summary-cards">
+                <div class="admin-summary-card">
+                    <h3>Total Orders</h3>
+                    <p id="summary-total-orders">0</p>
+                </div>
+                <div class="admin-summary-card">
+                    <h3>Pending Orders</h3>
+                    <p id="summary-pending-orders">0</p>
+                </div>
+                <div class="admin-summary-card">
+                    <h3>Confirmed Orders</h3>
+                    <p id="summary-confirmed-orders">0</p>
+                </div>
+                <div class="admin-summary-card">
+                    <h3>Cancelled Orders</h3>
+                    <p id="summary-cancelled-orders">0</p>
+                </div>
+                <div class="admin-summary-card">
+                    <h3>Total Revenue (Confirmed)</h3>
+                    <p id="summary-total-revenue">₹0.00</p>
+                </div>
+            </div>
+
+            <!-- Filters and search -->
+            <div class="admin-filters-row">
+                <div class="admin-filter-group">
+                    <label for="filter-status">Status:</label>
+                    <select id="filter-status">
+                        <option value="all">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="admin-filter-group">
+                    <label for="filter-sort">Sort By:</label>
+                    <select id="filter-sort">
+                        <option value="created_desc">Newest first</option>
+                        <option value="created_asc">Oldest first</option>
+                        <option value="amount_desc">Amount high to low</option>
+                        <option value="amount_asc">Amount low to high</option>
+                    </select>
+                </div>
+
+                <div class="admin-filter-group admin-filter-search">
+                    <label for="filter-search">Search:</label>
+                    <input type="text" id="filter-search" placeholder="Order ID or customer email/name">
+                </div>
+
+                <div class="admin-filter-group admin-filter-dates">
+                    <label>Date range:</label>
+                    <input type="date" id="filter-date-from">
+                    <span>to</span>
+                    <input type="date" id="filter-date-to">
+                </div>
+            </div>
+
+            <p id="orders-vendor-filter-indicator" class="admin-vendor-filter-indicator" style="display:none; margin:0.5rem 0;">
+                Showing orders for vendor: <span id="orders-vendor-filter-name"></span>
+                <button type="button" onclick="clearVendorFilter()">Clear</button>
+            </p>
+
+            <div class="admin-export-row">
+                <button type="button" onclick="exportOrdersCsv()">Export Orders (CSV)</button>
+            </div>
+
+            <div id="admin-orders-loading" style="text-align:center; padding:1rem;">Loading orders...</div>
+            <div id="admin-orders-error" style="text-align:center; padding:1rem; color:red; display:none;"></div>
+
+            <div id="admin-orders-empty" style="text-align:center; padding:1rem; display:none;">No orders found.</div>
+
+            <div class="admin-orders-table-wrapper">
+                <table id="admin-orders-table" class="admin-orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total (₹)</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Items</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vendor stats section -->
+    <section class="products admin-vendor-stats">
+        <div class="container">
+            <h2>Vendor Performance</h2>
+            <p class="tagline">Overview of vendors, their products, orders, and revenue.</p>
+
+            <div class="admin-filters-row vendor-stats-filters">
+                <div class="admin-filter-group">
+                    <label for="vendor-sort">Sort vendors:</label>
+                    <select id="vendor-sort">
+                        <option value="revenue_desc">Revenue high to low</option>
+                        <option value="orders_desc">Orders high to low</option>
+                        <option value="products_desc">Products high to low</option>
+                        <option value="name_asc">Name A–Z</option>
+                    </select>
+                </div>
+                <div class="admin-filter-group admin-filter-search">
+                    <label for="vendor-search">Search vendor:</label>
+                    <input type="text" id="vendor-search" placeholder="Name or email">
+                </div>
+            </div>
+
+            <div id="vendor-stats-loading" style="text-align:center; padding:1rem;">Loading vendor stats...</div>
+            <div id="vendor-stats-error" style="text-align:center; padding:1rem; color:red; display:none;"></div>
+
+            <div class="admin-vendor-stats-table-wrapper">
+                <div class="admin-export-row">
+                    <button type="button" onclick="exportVendorStatsCsv()">Export Vendor Stats (CSV)</button>
+                </div>
+                <table id="vendor-stats-table" class="admin-vendor-stats-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Products</th>
+                            <th>Orders</th>
+                            <th>Revenue (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendor-stats-tbody"></tbody>
+                </table>
+
+                <div id="vendor-chart-container" class="admin-vendor-chart" style="margin-top:1.5rem; display:none;">
+                    <h3>Vendor Trend</h3>
+                    <p id="vendor-chart-subtitle"></p>
+                    <div id="vendor-chart-bars" class="vendor-chart-bars"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Customers section -->
+    <section id="admin-customers-section" class="products admin-customers">
+        <div class="container">
+            <h2>Customers</h2>
+            <p class="tagline">See your customers, their orders, and spending.</p>
+
+            <div class="admin-filters-row">
+                <div class="admin-filter-group admin-filter-search">
+                    <label for="customer-search">Search:</label>
+                    <input type="text" id="customer-search" placeholder="Name or email">
+                </div>
+            </div>
+
+            <div id="admin-customers-loading" style="text-align:center; padding:1rem;">Loading customers...</div>
+            <div id="admin-customers-error" style="text-align:center; padding:1rem; color:red; display:none;"></div>
+            <div id="admin-customers-empty" style="text-align:center; padding:1rem; display:none;">No customers found.</div>
+
+            <div class="admin-orders-table-wrapper">
+                <table id="admin-customers-table" class="admin-customers-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Orders</th>
+                            <th>Total Spent (₹)</th>
+                            <th>Last Order</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-customers-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Users & access section -->
+    <section id="admin-users-section" class="products admin-users">
+        <div class="container">
+            <h2>Users &amp; Access</h2>
+            <p class="tagline">Manage who can access City Mart (admins, vendors, customers).</p>
+
+            <div class="admin-filters-row">
+                <div class="admin-filter-group">
+                    <label for="users-role-filter">Role:</label>
+                    <select id="users-role-filter">
+                        <option value="all">All</option>
+                        <option value="admin">Admins</option>
+                        <option value="vendor">Vendors</option>
+                        <option value="customer">Customers</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="admin-users-loading" style="text-align:center; padding:1rem;">Loading users...</div>
+            <div id="admin-users-error" style="text-align:center; padding:1rem; color:red; display:none;"></div>
+
+            <div class="admin-orders-table-wrapper">
+                <table id="admin-users-table" class="admin-users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Verified</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews section -->
+    <section id="admin-reviews-section" class="products admin-reviews">
+        <div class="container">
+            <h2>Product Reviews</h2>
+            <p class="tagline">Monitor and moderate customer reviews.</p>
+
+            <div id="admin-reviews-loading" style="text-align:center; padding:1rem;">Loading reviews...</div>
+            <div id="admin-reviews-error" style="text-align:center; padding:1rem; color:red; display:none;"></div>
+            <div id="admin-reviews-empty" style="text-align:center; padding:1rem; display:none;">No reviews yet.</div>
+
+            <div class="admin-orders-table-wrapper">
+                <table id="admin-reviews-table" class="admin-reviews-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-reviews-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order detail modal -->
+    <div id="order-detail-modal" class="auth-modal" style="display:none;">
+        <div class="auth-content order-detail-content">
+            <span class="close" onclick="closeOrderDetailModal()">&times;</span>
+            <h2>Order Details</h2>
+            <div id="order-detail-body"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 City Mart. All rights reserved.</p>
+        </div>
+    </footer>
+
+    </main>
+    </div>
+
+    <script>
+        let allOrders = [];
+        let vendorStats = [];
+        let selectedVendorId = null;
+        let lastFilteredOrders = [];
+        let lastRenderedVendorStats = [];
+        let customerStats = [];
+        let adminUsers = [];
+        let adminReviews = [];
+        let selectedCustomerId = null;
+
+        function formatDateTime(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return '-';
+            return d.toLocaleString();
+        }
+
+        function updateSummary(orders) {
+            const totalEl = document.getElementById('summary-total-orders');
+            const pendingEl = document.getElementById('summary-pending-orders');
+            const confirmedEl = document.getElementById('summary-confirmed-orders');
+            const cancelledEl = document.getElementById('summary-cancelled-orders');
+            const revenueEl = document.getElementById('summary-total-revenue');
+
+            const total = orders.length;
+            const pending = orders.filter(o => (o.status || 'pending') === 'pending').length;
+            const confirmed = orders.filter(o => o.status === 'confirmed').length;
+            const cancelled = orders.filter(o => o.status === 'cancelled').length;
+            const revenue = orders
+                .filter(o => o.status === 'confirmed')
+                .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+
+            if (totalEl) totalEl.textContent = String(total);
+            if (pendingEl) pendingEl.textContent = String(pending);
+            if (confirmedEl) confirmedEl.textContent = String(confirmed);
+            if (cancelledEl) cancelledEl.textContent = String(cancelled);
+            if (revenueEl) revenueEl.textContent = `₹${revenue.toFixed(2)}`;
+        }
+
+        function applyFiltersAndRender() {
+            const loadingEl = document.getElementById('admin-orders-loading');
+            const errorEl = document.getElementById('admin-orders-error');
+            const emptyEl = document.getElementById('admin-orders-empty');
+            const tbody = document.getElementById('admin-orders-tbody');
+            const statusSelect = document.getElementById('filter-status');
+            const sortSelect = document.getElementById('filter-sort');
+            const searchInput = document.getElementById('filter-search');
+            const dateFromInput = document.getElementById('filter-date-from');
+            const dateToInput = document.getElementById('filter-date-to');
+
+            if (!tbody) return;
+
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            let filtered = [...allOrders];
+
+            // Vendor filter (from vendor stats table click)
+            if (selectedVendorId) {
+                filtered = filtered.filter(o => {
+                    return (o.products || []).some(p => {
+                        const prod = p.productId;
+                        if (!prod || !prod.vendorId) return false;
+                        return String(prod.vendorId) === String(selectedVendorId);
+                    });
+                });
+            }
+
+            // Customer filter (from customers table click)
+            if (selectedCustomerId) {
+                filtered = filtered.filter(o => o.userId && String(o.userId._id || o.userId) === String(selectedCustomerId));
+            }
+
+            // Status filter
+            const statusVal = statusSelect ? statusSelect.value : 'all';
+            if (statusVal !== 'all') {
+                filtered = filtered.filter(o => (o.status || 'pending') === statusVal);
+            }
+
+            // Search filter
+            const q = (searchInput && searchInput.value || '').trim().toLowerCase();
+            if (q) {
+                filtered = filtered.filter(o => {
+                    const customerName = o.userId && (o.userId.username || o.userId.email) || '';
+                    const id = o._id || '';
+                    return String(customerName).toLowerCase().includes(q) ||
+                           String(id).toLowerCase().includes(q);
+                });
+            }
+
+            // Date range filter
+            const fromVal = dateFromInput && dateFromInput.value ? new Date(dateFromInput.value) : null;
+            const toVal = dateToInput && dateToInput.value ? new Date(dateToInput.value) : null;
+            if (fromVal || toVal) {
+                filtered = filtered.filter(o => {
+                    const t = new Date(o.createdAt || 0).getTime();
+                    if (Number.isNaN(t)) return false;
+                    if (fromVal && t < fromVal.getTime()) return false;
+                    if (toVal) {
+                        const endDay = new Date(toVal);
+                        endDay.setHours(23, 59, 59, 999);
+                        if (t > endDay.getTime()) return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Sorting
+            const sortVal = sortSelect ? sortSelect.value : 'created_desc';
+            filtered.sort((a, b) => {
+                const aTime = new Date(a.createdAt || 0).getTime();
+                const bTime = new Date(b.createdAt || 0).getTime();
+                const aAmt = Number(a.totalAmount) || 0;
+                const bAmt = Number(b.totalAmount) || 0;
+
+                switch (sortVal) {
+                    case 'created_asc':
+                        return aTime - bTime;
+                    case 'amount_desc':
+                        return bAmt - aAmt;
+                    case 'amount_asc':
+                        return aAmt - bAmt;
+                    case 'created_desc':
+                    default:
+                        return bTime - aTime;
+                }
+            });
+
+            // Remember current filtered list for CSV export
+            lastFilteredOrders = filtered;
+
+            if (!filtered.length) {
+                emptyEl.style.display = 'block';
+            } else {
+                emptyEl.style.display = 'none';
+            }
+
+            filtered.forEach(order => {
+                const tr = document.createElement('tr');
+
+                const customerName = order.userId && (order.userId.username || order.userId.email) || '-';
+                const status = order.status || 'pending';
+                const total = Number(order.totalAmount || 0).toFixed(2);
+                const created = formatDateTime(order.createdAt);
+
+                const itemsText = (order.products || []).map(p => {
+                    const name = p.productId && p.productId.name ? p.productId.name : 'Unknown';
+                    const qty = p.quantity || 0;
+                    return `${name} x${qty}`;
+                }).join(', ');
+
+                tr.innerHTML = `
+                    <td>${order._id}</td>
+                    <td>${customerName}</td>
+                    <td>${total}</td>
+                    <td class="order-status-${status}">${status}</td>
+                    <td>${created}</td>
+                    <td>${itemsText || '-'}</td>
+                    <td>
+                        ${status === 'pending'
+                            ? `<button type="button" data-action="confirm" data-id="${order._id}">Confirm</button>
+                               <button type="button" data-action="cancel" data-id="${order._id}">Cancel</button>`
+                            : status === 'cancelled'
+                                ? '<span>Cancelled</span>'
+                                : '<span>Confirmed</span>'}
+                    </td>
+                `;
+
+                // Clicking a row opens detail view (except when clicking the confirm button)
+                tr.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (target && target.getAttribute && target.getAttribute('data-action') === 'confirm') {
+                        // Let the button handler deal with it
+                        return;
+                    }
+                    openOrderDetailModal(order);
+                });
+
+                // Attach confirm handler if pending
+                const confirmBtn = tr.querySelector('button[data-action=\"confirm\"]');
+                const cancelBtn = tr.querySelector('button[data-action=\"cancel\"]');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = confirmBtn.getAttribute('data-id');
+                        if (id) {
+                            confirmOrder(id);
+                        }
+                    });
+                }
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = cancelBtn.getAttribute('data-id');
+                        if (id) {
+                            cancelOrder(id);
+                        }
+                    });
+                }
+
+                tbody.appendChild(tr);
+            });
+
+            // Update summary cards (based on all orders, not just filtered)
+            updateSummary(allOrders);
+
+            // Update vendor filter indicator
+            const indicator = document.getElementById('orders-vendor-filter-indicator');
+            const indicatorName = document.getElementById('orders-vendor-filter-name');
+            if (indicator && indicatorName) {
+                if (selectedVendorId) {
+                    const vs = vendorStats.find(v => String(v.vendorId) === String(selectedVendorId));
+                    indicatorName.textContent = vs ? (vs.name || vs.email || String(selectedVendorId)) : String(selectedVendorId);
+                    indicator.style.display = 'block';
+                } else {
+                    indicator.style.display = 'none';
+                }
+            }
+        }
+
+        function clearVendorFilter() {
+            selectedVendorId = null;
+            const indicator = document.getElementById('orders-vendor-filter-indicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+            applyFiltersAndRender();
+        }
+
+        function openOrderDetailModal(order) {
+            const modal = document.getElementById('order-detail-modal');
+            const body = document.getElementById('order-detail-body');
+            if (!modal || !body) return;
+
+            const customerName = order.userId && (order.userId.username || order.userId.email) || '-';
+            const created = formatDateTime(order.createdAt);
+            const status = order.status || 'pending';
+            const total = Number(order.totalAmount || 0).toFixed(2);
+
+            const itemsHtml = (order.products || []).map(p => {
+                const name = p.productId && p.productId.name ? p.productId.name : 'Unknown';
+                const qty = p.quantity || 0;
+                const price = Number(p.price || 0).toFixed(2);
+                return `<li><strong>${name}</strong> — Qty: ${qty}, Price: ₹${price}</li>`;
+            }).join('') || '<li>No items</li>';
+
+            body.innerHTML = `
+                <p><strong>Order ID:</strong> ${order._id}</p>
+                <p><strong>Customer:</strong> ${customerName}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Total Amount:</strong> ₹${total}</p>
+                <p><strong>Created:</strong> ${created}</p>
+                <h3>Items</h3>
+                <ul class="order-detail-items">${itemsHtml}</ul>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function closeOrderDetailModal() {
+            const modal = document.getElementById('order-detail-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function renderVendorStats() {
+            const loadingEl = document.getElementById('vendor-stats-loading');
+            const errorEl = document.getElementById('vendor-stats-error');
+            const tbody = document.getElementById('vendor-stats-tbody');
+            const sortSelect = document.getElementById('vendor-sort');
+            const searchInput = document.getElementById('vendor-search');
+
+            if (!tbody) return;
+
+            // When rendering, hide loading/error and rebuild rows from vendorStats
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            let list = Array.isArray(vendorStats) ? [...vendorStats] : [];
+
+            // Text search by vendor name/email
+            const q = (searchInput && searchInput.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(v => {
+                    const name = v.name || '';
+                    const email = v.email || '';
+                    return name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
+                });
+            }
+
+            // Sorting
+            const sortVal = sortSelect ? sortSelect.value : 'revenue_desc';
+            list.sort((a, b) => {
+                const aRev = Number(a.revenue) || 0;
+                const bRev = Number(b.revenue) || 0;
+                const aOrders = Number(a.ordersCount) || 0;
+                const bOrders = Number(b.ordersCount) || 0;
+                const aProd = Number(a.productsCount) || 0;
+                const bProd = Number(b.productsCount) || 0;
+                const aName = (a.name || '').toLowerCase();
+                const bName = (b.name || '').toLowerCase();
+
+                switch (sortVal) {
+                    case 'orders_desc':
+                        return bOrders - aOrders;
+                    case 'products_desc':
+                        return bProd - aProd;
+                    case 'name_asc':
+                        return aName.localeCompare(bName);
+                    case 'revenue_desc':
+                    default:
+                        return bRev - aRev;
+                }
+            });
+
+            // Remember current vendor stats for CSV export
+            lastRenderedVendorStats = list;
+
+            list.forEach(v => {
+                const tr = document.createElement('tr');
+                const revenue = Number(v.revenue || 0).toFixed(2);
+                tr.setAttribute('data-vendor-id', v.vendorId || '');
+                tr.innerHTML = `
+                    <td>${v.name || '-'}</td>
+                    <td>${v.email || '-'}</td>
+                    <td>${v.phone || '-'}</td>
+                    <td>${v.productsCount || 0}</td>
+                    <td>${v.ordersCount || 0}</td>
+                    <td>${revenue}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Single delegated click handler to filter orders by vendor
+            if (!tbody._vendorClickBound) {
+                tbody.addEventListener('click', (e) => {
+                    const row = e.target.closest('tr');
+                    if (!row) return;
+                    const vendorId = row.getAttribute('data-vendor-id');
+                    if (!vendorId) return;
+                    selectedVendorId = vendorId;
+                    applyFiltersAndRender();
+                    showVendorChart(vendorId);
+                    if (window.showToast) {
+                        const vs = vendorStats.find(v => String(v.vendorId) === String(vendorId));
+                        const name = vs ? (vs.name || vs.email || '') : '';
+                        window.showToast(`Filtered orders for vendor ${name || vendorId}`, 'success');
+                    }
+                    const ordersTable = document.getElementById('admin-orders-table');
+                    if (ordersTable && ordersTable.scrollIntoView) {
+                        ordersTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+                tbody._vendorClickBound = true;
+            }
+        }
+
+        function showVendorChart(vendorId) {
+            const container = document.getElementById('vendor-chart-container');
+            const subtitle = document.getElementById('vendor-chart-subtitle');
+            const bars = document.getElementById('vendor-chart-bars');
+            if (!container || !bars) return;
+
+            const vs = vendorStats.find(v => String(v.vendorId) === String(vendorId));
+            const name = vs ? (vs.name || vs.email || vendorId) : vendorId;
+
+            // Collect this vendor's orders from allOrders (respecting current date range)
+            const vendorOrders = allOrders.filter(o => {
+                return (o.products || []).some(p => {
+                    const prod = p.productId;
+                    if (!prod || !prod.vendorId) return false;
+                    return String(prod.vendorId) === String(vendorId);
+                });
+            });
+
+            const byDate = new Map();
+            vendorOrders.forEach(order => {
+                const iso = order.createdAt || '';
+                const key = iso.split('T')[0] || 'unknown';
+                const total = Number(order.totalAmount || 0);
+                if (!byDate.has(key)) {
+                    byDate.set(key, { count: 0, revenue: 0 });
+                }
+                const entry = byDate.get(key);
+                entry.count += 1;
+                entry.revenue += total;
+            });
+
+            const entries = Array.from(byDate.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+            bars.innerHTML = '';
+
+            if (!entries.length) {
+                container.style.display = 'block';
+                subtitle.textContent = `No orders for ${name} in selected range.`;
+                return;
+            }
+
+            const maxRevenue = Math.max(...entries.map(([_, v]) => v.revenue), 1);
+            subtitle.textContent = `Daily revenue for ${name}`;
+
+            entries.forEach(([date, stats]) => {
+                const row = document.createElement('div');
+                row.className = 'vendor-chart-row';
+
+                const label = document.createElement('span');
+                label.className = 'vendor-chart-date';
+                label.textContent = date;
+
+                const barOuter = document.createElement('div');
+                barOuter.className = 'vendor-chart-bar-outer';
+
+                const bar = document.createElement('div');
+                bar.className = 'vendor-chart-bar-inner';
+                const pct = (stats.revenue / maxRevenue) * 100;
+                bar.style.width = pct.toFixed(1) + '%';
+                bar.textContent = `₹${stats.revenue.toFixed(2)} (${stats.count} orders)`;
+
+                barOuter.appendChild(bar);
+                row.appendChild(label);
+                row.appendChild(barOuter);
+                bars.appendChild(row);
+            });
+
+            container.style.display = 'block';
+        }
+
+        async function loadAdminSummary() {
+            const totalEl = document.getElementById('summary-total-orders');
+            const pendingEl = document.getElementById('summary-pending-orders');
+            const confirmedEl = document.getElementById('summary-confirmed-orders');
+            const cancelledEl = document.getElementById('summary-cancelled-orders');
+            const revenueEl = document.getElementById('summary-total-revenue');
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/admin/summary', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                if (!resp.ok) {
+                    console.warn('Failed to load admin summary');
+                    return;
+                }
+                const data = await resp.json();
+                if (totalEl) totalEl.textContent = String(data.totalOrders ?? 0);
+                if (pendingEl) pendingEl.textContent = String(data.pendingOrders ?? 0);
+                if (confirmedEl) confirmedEl.textContent = String(data.confirmedOrders ?? 0);
+                if (cancelledEl) cancelledEl.textContent = String(data.cancelledOrders ?? 0);
+                if (revenueEl) revenueEl.textContent = '₹' + (Number(data.totalRevenue || 0)).toFixed(2);
+            } catch (err) {
+                console.error('Error loading admin summary:', err);
+            }
+        }
+
+        async function loadVendorStats() {
+            const loadingEl = document.getElementById('vendor-stats-loading');
+            const errorEl = document.getElementById('vendor-stats-error');
+            const tbody = document.getElementById('vendor-stats-tbody');
+
+            if (!loadingEl || !errorEl || !tbody) return;
+
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const dateFromInput = document.getElementById('filter-date-from');
+                const dateToInput = document.getElementById('filter-date-to');
+                const params = new URLSearchParams();
+                if (dateFromInput && dateFromInput.value) params.set('from', dateFromInput.value);
+                if (dateToInput && dateToInput.value) params.set('to', dateToInput.value);
+                const qs = params.toString();
+
+                const resp = await fetch(apiBase + '/api/admin/vendor-stats' + (qs ? `?${qs}` : ''), {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+
+                if (resp.status === 401 || resp.status === 403) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'You must be logged in as an admin to view vendor stats.';
+                    return;
+                }
+
+                if (!resp.ok) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Failed to load vendor stats. Please try again.';
+                    return;
+                }
+
+                const data = await resp.json();
+                vendorStats = Array.isArray(data) ? data : [];
+
+                loadingEl.style.display = 'none';
+                renderVendorStats();
+            } catch (err) {
+                console.error('Error loading vendor stats:', err);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'Network error while loading vendor stats.';
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Cancel this order?')) return;
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/orders/' + orderId + '/cancel', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to cancel order.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast('Order cancelled successfully.', 'success');
+                }
+
+                const idx = allOrders.findIndex(o => o._id === orderId);
+                if (idx !== -1) {
+                    allOrders[idx].status = 'cancelled';
+                }
+                applyFiltersAndRender();
+            } catch (err) {
+                console.error('Error cancelling order:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while cancelling order.', 'error');
+                }
+            }
+        }
+
+        async function loadAdminOrders() {
+            const loadingEl = document.getElementById('admin-orders-loading');
+            const errorEl = document.getElementById('admin-orders-error');
+            const tbody = document.getElementById('admin-orders-tbody');
+
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/orders', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+
+                if (resp.status === 401 || resp.status === 403) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'You must be logged in as an admin to view orders.';
+                    return;
+                }
+
+                if (!resp.ok) {
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Failed to load orders. Please try again.';
+                    return;
+                }
+
+                const orders = await resp.json();
+                allOrders = Array.isArray(orders) ? orders : [];
+                applyFiltersAndRender();
+            } catch (err) {
+                console.error('Error loading admin orders:', err);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'Network error while loading orders.';
+            }
+        }
+
+        async function confirmOrder(orderId) {
+            if (!confirm('Confirm this order?')) return;
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/orders/' + orderId + '/confirm', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to confirm order.';
+                    if (window.showToast) {
+                        window.showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                    return;
+                }
+
+                if (window.showToast) {
+                    window.showToast('Order confirmed successfully.', 'success');
+                }
+
+                // Refresh local list instead of full reload
+                const idx = allOrders.findIndex(o => o._id === orderId);
+                if (idx !== -1) {
+                    allOrders[idx].status = 'confirmed';
+                }
+                applyFiltersAndRender();
+            } catch (err) {
+                console.error('Error confirming order:', err);
+                if (window.showToast) {
+                    window.showToast('Network error while confirming order.', 'error');
+                }
+            }
+        }
+
+        // ----- Customers table rendering -----
+        function renderCustomerStats() {
+            const loadingEl = document.getElementById('admin-customers-loading');
+            const errorEl = document.getElementById('admin-customers-error');
+            const emptyEl = document.getElementById('admin-customers-empty');
+            const tbody = document.getElementById('admin-customers-tbody');
+            const searchInput = document.getElementById('customer-search');
+
+            if (!tbody) return;
+
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            let list = Array.isArray(customerStats) ? [...customerStats] : [];
+            const q = (searchInput && searchInput.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(c => {
+                    const name = c.name || '';
+                    const email = c.email || '';
+                    return name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
+                });
+            }
+
+            if (!list.length) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            list.forEach(c => {
+                const tr = document.createElement('tr');
+                const spent = Number(c.totalSpent || 0).toFixed(2);
+                const last = c.lastOrderAt ? formatDateTime(c.lastOrderAt) : '-';
+                const statusLabel = c.isBlocked ? 'Blocked' : 'Active';
+
+                tr.innerHTML = `
+                    <td>${c.name || '-'}</td>
+                    <td>${c.email || '-'}</td>
+                    <td>${c.phone || '-'}</td>
+                    <td>${c.ordersCount || 0}</td>
+                    <td>${spent}</td>
+                    <td>${last}</td>
+                    <td><span class="status-pill ${c.isBlocked ? 'status-blocked' : 'status-active'}">${statusLabel}</span></td>
+                    <td><button type="button" data-action="view-orders" data-id="${c.userId}">View orders</button></td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            if (!tbody._customersBound) {
+                tbody.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-action="view-orders"]');
+                    if (!btn) return;
+                    const id = btn.getAttribute('data-id');
+                    if (!id) return;
+                    selectedCustomerId = id;
+                    applyFiltersAndRender();
+                    const ordersTable = document.getElementById('admin-orders-table');
+                    if (ordersTable && ordersTable.scrollIntoView) {
+                        ordersTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+                tbody._customersBound = true;
+            }
+        }
+
+        async function loadCustomerStats() {
+            const loadingEl = document.getElementById('admin-customers-loading');
+            const errorEl = document.getElementById('admin-customers-error');
+            const emptyEl = document.getElementById('admin-customers-empty');
+
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (errorEl) errorEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/admin/customer-stats', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                if (!resp.ok) {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (errorEl) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = 'Failed to load customers.';
+                    }
+                    return;
+                }
+                customerStats = await resp.json();
+                renderCustomerStats();
+            } catch (err) {
+                console.error('Error loading customer stats:', err);
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Network error while loading customers.';
+                }
+            }
+        }
+
+        // ----- Users governance table -----
+        function renderAdminUsersTable() {
+            const loadingEl = document.getElementById('admin-users-loading');
+            const errorEl = document.getElementById('admin-users-error');
+            const tbody = document.getElementById('admin-users-tbody');
+            const roleFilter = document.getElementById('users-role-filter');
+            if (!tbody) return;
+
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            let list = Array.isArray(adminUsers) ? [...adminUsers] : [];
+            const roleVal = roleFilter ? roleFilter.value : 'all';
+            if (roleVal !== 'all') {
+                list = list.filter(u => u.role === roleVal);
+            }
+
+            list.forEach(u => {
+                const tr = document.createElement('tr');
+                const last = u.lastLogin ? formatDateTime(u.lastLogin) : '-';
+                const statusLabel = u.isBlocked ? 'Blocked' : 'Active';
+                const verifyLabel = u.isVerified ? 'Verified' : 'Unverified';
+
+                const roleClass =
+                    u.role === 'admin' ? 'role-admin' :
+                    u.role === 'vendor' ? 'role-vendor' : 'role-customer';
+
+                tr.innerHTML = `
+                    <td>${u.username || '-'}</td>
+                    <td>${u.email || '-'}</td>
+                    <td><span class="role-pill ${roleClass}">${u.role}</span></td>
+                    <td><span class="status-pill ${u.isVerified ? 'status-active' : 'status-muted'}">${verifyLabel}</span></td>
+                    <td><span class="status-pill ${u.isBlocked ? 'status-blocked' : 'status-active'}">${statusLabel}</span></td>
+                    <td>${last}</td>
+                    <td>
+                        ${u.isBlocked
+                            ? `<button type="button" data-action="unblock" data-id="${u._id}">Unblock</button>`
+                            : `<button type="button" data-action="block" data-id="${u._id}">Block</button>`}
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            if (!tbody._usersBound) {
+                tbody.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button[data-action]');
+                    if (!btn) return;
+                    const action = btn.getAttribute('data-action');
+                    const id = btn.getAttribute('data-id');
+                    if (!id) return;
+                    if (action === 'block') {
+                        await toggleUserBlock(id, true);
+                    } else if (action === 'unblock') {
+                        await toggleUserBlock(id, false);
+                    }
+                });
+                tbody._usersBound = true;
+            }
+        }
+
+        async function toggleUserBlock(userId, shouldBlock) {
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + `/api/admin/users/${userId}/${shouldBlock ? 'block' : 'unblock'}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                const data = await resp.json().catch(() => null);
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to update user.';
+                    if (window.showToast) window.showToast(msg, 'error');
+                    return;
+                }
+                adminUsers = adminUsers.map(u => u._id === data._id ? data : u);
+                renderAdminUsersTable();
+                if (window.showToast) window.showToast('User updated.', 'success');
+            } catch (err) {
+                console.error('Error updating user block state:', err);
+                if (window.showToast) window.showToast('Network error while updating user.', 'error');
+            }
+        }
+
+        async function loadAdminUsers() {
+            const loadingEl = document.getElementById('admin-users-loading');
+            const errorEl = document.getElementById('admin-users-error');
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (errorEl) errorEl.style.display = 'none';
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/admin/users', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                if (!resp.ok) {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (errorEl) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = 'Failed to load users.';
+                    }
+                    return;
+                }
+                adminUsers = await resp.json();
+                renderAdminUsersTable();
+            } catch (err) {
+                console.error('Error loading admin users:', err);
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Network error while loading users.';
+                }
+            }
+        }
+
+        // ----- Reviews table -----
+        function renderAdminReviewsTable() {
+            const loadingEl = document.getElementById('admin-reviews-loading');
+            const errorEl = document.getElementById('admin-reviews-error');
+            const emptyEl = document.getElementById('admin-reviews-empty');
+            const tbody = document.getElementById('admin-reviews-tbody');
+            if (!tbody) return;
+
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+            tbody.innerHTML = '';
+
+            if (!adminReviews.length) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            adminReviews.forEach(r => {
+                const tr = document.createElement('tr');
+                const productName = r.productId && (r.productId.name || r.productId) || '-';
+                const userName = r.userId && (r.userId.username || r.userId.email || r.userId) || '-';
+                const date = formatDateTime(r.createdAt);
+
+                tr.innerHTML = `
+                    <td>${productName}</td>
+                    <td>${userName}</td>
+                    <td>${r.rating}</td>
+                    <td>${r.comment || ''}</td>
+                    <td>${date}</td>
+                    <td><button type="button" data-action="delete" data-id="${r._id}">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (!tbody._reviewsBound) {
+                tbody.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button[data-action="delete"]');
+                    if (!btn) return;
+                    const id = btn.getAttribute('data-id');
+                    if (!id) return;
+                    if (!confirm('Delete this review?')) return;
+                    await deleteReview(id);
+                });
+                tbody._reviewsBound = true;
+            }
+        }
+
+        async function deleteReview(reviewId) {
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/admin/reviews/' + reviewId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                const data = await resp.json().catch(() => null);
+                if (!resp.ok) {
+                    const msg = data && data.message ? data.message : 'Failed to delete review.';
+                    if (window.showToast) window.showToast(msg, 'error');
+                    return;
+                }
+                adminReviews = adminReviews.filter(r => r._id !== reviewId);
+                renderAdminReviewsTable();
+                if (window.showToast) window.showToast('Review deleted.', 'success');
+            } catch (err) {
+                console.error('Error deleting review:', err);
+                if (window.showToast) window.showToast('Network error while deleting review.', 'error');
+            }
+        }
+
+        async function loadAdminReviews() {
+            const loadingEl = document.getElementById('admin-reviews-loading');
+            const errorEl = document.getElementById('admin-reviews-error');
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (errorEl) errorEl.style.display = 'none';
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const resp = await fetch(apiBase + '/api/admin/reviews', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (window.authToken || ''),
+                    },
+                });
+                if (!resp.ok) {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (errorEl) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = 'Failed to load reviews.';
+                    }
+                    return;
+                }
+                adminReviews = await resp.json();
+                renderAdminReviewsTable();
+            } catch (err) {
+                console.error('Error loading reviews:', err);
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'Network error while loading reviews.';
+                }
+            }
+        }
+
+        function initAdminTabs() {
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('admin-tab-active'));
+                    tab.classList.add('admin-tab-active');
+                    const target = tab.getAttribute('data-target');
+                    if (!target) return;
+                    const el = document.querySelector(target);
+                    if (el && el.scrollIntoView) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ensure currentUser/authToken are loaded from localStorage (in case script.js hasn't yet)
+            if (!window.currentUser || !window.authToken) {
+                try {
+                    const storedToken = localStorage.getItem('citymart_token');
+                    const storedUser = localStorage.getItem('citymart_user');
+                    if (storedToken && storedUser) {
+                        window.authToken = storedToken;
+                        window.currentUser = JSON.parse(storedUser);
+                    }
+                } catch (e) {
+                    console.warn('Could not read auth info from localStorage', e);
+                }
+            }
+
+            if (!window.currentUser || window.currentUser.role !== 'admin') {
+                alert('Please login as an admin to access the admin dashboard.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const statusSelect = document.getElementById('filter-status');
+            const sortSelect = document.getElementById('filter-sort');
+            const searchInput = document.getElementById('filter-search');
+            const dateFromInput = document.getElementById('filter-date-from');
+            const dateToInput = document.getElementById('filter-date-to');
+            const vendorSort = document.getElementById('vendor-sort');
+            const vendorSearch = document.getElementById('vendor-search');
+
+            if (statusSelect) {
+                statusSelect.addEventListener('change', applyFiltersAndRender);
+            }
+            if (sortSelect) {
+                sortSelect.addEventListener('change', applyFiltersAndRender);
+            }
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFiltersAndRender);
+            }
+            if (dateFromInput) {
+                dateFromInput.addEventListener('change', () => {
+                    applyFiltersAndRender();
+                    loadVendorStats();
+                });
+            }
+            if (dateToInput) {
+                dateToInput.addEventListener('change', () => {
+                    applyFiltersAndRender();
+                    loadVendorStats();
+                });
+            }
+            if (vendorSort) {
+                vendorSort.addEventListener('change', renderVendorStats);
+            }
+            if (vendorSearch) {
+                vendorSearch.addEventListener('input', renderVendorStats);
+            }
+
+            const customerSearch = document.getElementById('customer-search');
+            if (customerSearch) {
+                customerSearch.addEventListener('input', renderCustomerStats);
+            }
+            const usersRoleFilter = document.getElementById('users-role-filter');
+            if (usersRoleFilter) {
+                usersRoleFilter.addEventListener('change', renderAdminUsersTable);
+            }
+
+            initAdminTabs();
+
+            loadAdminSummary();
+            loadAdminOrders();
+            loadVendorStats();
+            loadCustomerStats();
+            loadAdminUsers();
+            loadAdminReviews();
+        });
+        function toCsvValue(value) {
+            const str = String(value == null ? '' : value);
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+
+        function exportOrdersCsv() {
+            if (!lastFilteredOrders || !lastFilteredOrders.length) {
+                if (window.showToast) window.showToast('No orders to export.', 'error');
+                return;
+            }
+            const rows = [];
+            rows.push(['Order ID', 'Customer', 'Status', 'Total', 'Created At', 'Items']);
+            lastFilteredOrders.forEach(order => {
+                const id = order._id || '';
+                const customer = order.userId && (order.userId.username || order.userId.email) || '';
+                const status = order.status || 'pending';
+                const total = Number(order.totalAmount || 0).toFixed(2);
+                const created = order.createdAt || '';
+                const itemsText = (order.products || []).map(p => {
+                    const name = p.productId && p.productId.name ? p.productId.name : 'Unknown';
+                    const qty = p.quantity || 0;
+                    return `${name} x${qty}`;
+                }).join('; ');
+                rows.push([id, customer, status, total, created, itemsText]);
+            });
+            downloadCsv('orders.csv', rows);
+        }
+
+        function exportVendorStatsCsv() {
+            if (!lastRenderedVendorStats || !lastRenderedVendorStats.length) {
+                if (window.showToast) window.showToast('No vendor stats to export.', 'error');
+                return;
+            }
+            const rows = [];
+            rows.push(['Vendor ID', 'Name', 'Email', 'Phone', 'Products', 'Orders', 'Revenue']);
+            lastRenderedVendorStats.forEach(v => {
+                rows.push([
+                    v.vendorId || '',
+                    v.name || '',
+                    v.email || '',
+                    v.phone || '',
+                    v.productsCount || 0,
+                    v.ordersCount || 0,
+                    Number(v.revenue || 0).toFixed(2),
+                ]);
+            });
+            downloadCsv('vendor-stats.csv', rows);
+        }
+
+        function downloadCsv(filename, rows) {
+            const lines = rows.map(cols => cols.map(toCsvValue).join(','));
+            const csvContent = lines.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+    <!-- Login Options Modal -->
+    <div id="login-options-modal" class="login-options-modal">
+        <div class="login-options-content">
+            <span class="close" onclick="closeLoginOptionsModal()">&times;</span>
+            <h2>Select Login Type</h2>
+            <div class="login-options">
+                <button type="button" onclick="startLoginAs('customer')">Customer Login</button>
+                <button type="button" onclick="startLoginAs('vendor')">Vendor Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-content">
+            <span class="close" onclick="closeAuthModal()">&times;</span>
+            <h2 id="auth-modal-title">Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Name" required>
+                <input type="text" id="login-email" placeholder="Email or phone" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" id="auth-submit-button">Login</button>
+            </form>
+            <p id="login-status"></p>
+            <p class="auth-switch">
+                <a href="#" onclick="switchAuthMode(event)">New user? Sign up</a>
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>
