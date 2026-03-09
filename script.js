@@ -1489,6 +1489,7 @@ async function handleCheckoutFormSubmission(e) {
             closeCheckoutModal();
 
             const params = new URLSearchParams();
+            params.set('method', 'cod');
             if (data && data._id) {
                 params.set('orderId', data._id);
             }
@@ -1593,6 +1594,7 @@ async function handleCheckoutFormSubmission(e) {
 
                     const orderIdFromDb = verifyData.orderId;
                     const params = new URLSearchParams();
+                    params.set('method', 'online');
                     if (orderIdFromDb) {
                         params.set('orderId', orderIdFromDb);
                     }

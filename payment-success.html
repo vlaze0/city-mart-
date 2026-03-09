@@ -51,8 +51,9 @@
 
             if (method === 'cod') {
                 // Cash on Delivery: emphasize order placement, not payment.
+                document.title = 'Order Placed - City Mart';
                 headingEl.textContent = 'Thank you! Your order was placed successfully.';
-                textEl.textContent = `Your Cash on Delivery order has been created successfully.${orderSuffix}`;
+                textEl.textContent = `Your Cash on Delivery order has been confirmed.${orderSuffix}`;
             } else {
                 // Default / online payment case.
                 headingEl.textContent = 'Thank you! Your payment was successful.';
