@@ -900,14 +900,16 @@ app.delete('/api/admin/reviews/:id', authenticateToken, requireAdmin, async (req
 
 // Create a Razorpay order for the payable amount (in INR)
 app.post('/api/payments/create-order', async (req, res) => {
+  console.log('[create-order] HIT — body:', JSON.stringify(req.body));
   try {
     if (!razorpayInstance) {
-      console.error('Razorpay instance is not initialized. Check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET env vars.');
+      console.error('[create-order] Razorpay instance is NULL');
       return res.status(503).json({ message: 'Online payment is currently unavailable. Please use Cash on Delivery.' });
     }
 
     const { amount } = req.body;
     const numericAmount = Number(amount);
+    console.log('[create-order] amount:', amount, 'numericAmount:', numericAmount);
     if (!numericAmount || numericAmount <= 0) {
       return res.status(400).json({ message: 'Valid amount is required to create order' });
     }
@@ -918,7 +920,9 @@ app.post('/api/payments/create-order', async (req, res) => {
       receipt: `rcpt_${Date.now()}`,
     };
 
+    console.log('[create-order] Calling Razorpay API with options:', JSON.stringify(options));
     const order = await razorpayInstance.orders.create(options);
+    console.log('[create-order] Razorpay order created:', order.id);
 
     return res.json({
       orderId: order.id,
@@ -927,8 +931,10 @@ app.post('/api/payments/create-order', async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error('Error creating Razorpay order:', error?.error || error?.message || error);
-    return res.status(500).json({ message: 'Failed to create payment order' });
+    console.error('[create-order] ERROR:', error);
+    const razorpayError = error?.error || {};
+    const detail = razorpayError.description || error?.message || 'Unknown error';
+    return res.status(500).json({ message: 'Failed to create payment order', detail });
   }
 });
 
