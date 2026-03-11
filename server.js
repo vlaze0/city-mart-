@@ -45,6 +45,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Razorpay client (credentials are read from environment variables)
 // Initialize only if credentials are provided (for development mode)
 let razorpayInstance = null;
+console.log('Razorpay env vars:','KEY_ID length=', process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 'none',
+            'SECRET length=', process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 'none');
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && 
     process.env.RAZORPAY_KEY_ID !== 'your_razorpay_key_id') {
   razorpayInstance = new Razorpay({
