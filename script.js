@@ -1,7 +1,7 @@
 const API_BASE =
   window.location.protocol === 'file:'
     ? 'http://localhost:3000'
-    : '';
+    : window.location.origin; // use current host (e.g. citymart.net.in) when deployed
 
 
 

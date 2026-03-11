@@ -80,7 +80,7 @@
 
             try {
                 // If the page is opened as file://, call the API via http://localhost:3000 explicitly
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const response = await fetch(`${apiBase}/api/products`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch products');
