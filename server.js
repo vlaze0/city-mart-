@@ -63,15 +63,19 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Razorpay client (credentials are read from environment variables)
 // Initialize only if credentials are provided (for development mode)
 let razorpayInstance = null;
-console.log('Razorpay env vars:','KEY_ID length=', process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 'none',
-            'SECRET length=', process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 'none');
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && 
-    process.env.RAZORPAY_KEY_ID !== 'your_razorpay_key_id') {
+const rzpKeyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+const rzpKeySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+console.log('Razorpay env vars:', 'KEY_ID length=', rzpKeyId.length || 'none',
+            'SECRET length=', rzpKeySecret.length || 'none');
+if (rzpKeyId && rzpKeySecret && rzpKeyId !== 'your_razorpay_key_id') {
+  if (!rzpKeyId.startsWith('rzp_test_') && !rzpKeyId.startsWith('rzp_live_')) {
+    console.warn('⚠️  RAZORPAY_KEY_ID does not start with rzp_test_ or rzp_live_ — credentials may be invalid.');
+  }
   razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+    key_id: rzpKeyId,
+    key_secret: rzpKeySecret,
   });
-  console.log('Razorpay payment gateway initialized');
+  console.log('Razorpay payment gateway initialized (' + (rzpKeyId.startsWith('rzp_live_') ? 'LIVE' : 'TEST') + ' mode)');
 } else {
   console.warn('⚠️  Razorpay credentials not configured. Payment features will be disabled.');
 }
@@ -948,13 +952,15 @@ app.post('/api/payments/create-order', async (req, res) => {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID,
+      key: rzpKeyId,
     });
   } catch (error) {
-    console.error('[create-order] ERROR:', error);
+    console.error('[create-order] ERROR:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     const razorpayError = error?.error || {};
+    const statusCode = razorpayError.code === 'BAD_REQUEST_ERROR' ? 400 : 500;
     const detail = razorpayError.description || error?.message || 'Unknown error';
-    return res.status(500).json({ message: 'Failed to create payment order', detail });
+    const code = razorpayError.code || error?.code || undefined;
+    return res.status(statusCode).json({ message: 'Failed to create payment order', detail, code });
   }
 });
 
@@ -976,7 +982,7 @@ app.post('/api/payments/verify', async (req, res) => {
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', rzpKeySecret)
       .update(body.toString())
       .digest('hex');
 

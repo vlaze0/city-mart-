@@ -1521,7 +1521,8 @@ async function handleCheckoutFormSubmission(e) {
         if (!createRes.ok) {
             const errBody = await createRes.json().catch(() => null);
             console.error('Failed to create Razorpay order', createRes.status, errBody);
-            const msg = errBody && errBody.message ? errBody.message : 'Could not start payment. Please try again.';
+            const detail = errBody && errBody.detail ? ` (${errBody.detail})` : '';
+            const msg = errBody && errBody.message ? errBody.message + detail : 'Could not start payment. Please try again.';
             showToast(msg, 'error');
             return;
         }
