@@ -1519,12 +1519,14 @@ async function handleCheckoutFormSubmission(e) {
         });
 
         if (!createRes.ok) {
-            console.error('Failed to create Razorpay order', createRes.status);
-            showToast('Could not start payment. Please try again.', 'error');
+            const errBody = await createRes.json().catch(() => null);
+            console.error('Failed to create Razorpay order', createRes.status, errBody);
+            const msg = errBody && errBody.message ? errBody.message : 'Could not start payment. Please try again.';
+            showToast(msg, 'error');
             return;
         }
 
-        const { orderId, amount, currency, key } = await createRes.json();
+        const { orderId, amount, currency, key } = await createRes.json(); // if this throws, it will be caught by outer try
         if (!orderId || !amount || !key) {
             console.error('Invalid create-order response');
             showToast('Could not start payment. Please try again.', 'error');
