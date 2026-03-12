@@ -183,6 +183,8 @@ const orderSchema = new mongoose.Schema({
   }],
   totalAmount: Number,
   status: { type: String, default: 'pending' },
+  paymentMethod: { type: String, enum: ['COD', 'ONLINE'], default: 'ONLINE' },
+  paymentStatus: { type: String, enum: ['UNPAID', 'PAID', 'PENDING'], default: 'PENDING' },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -553,8 +555,15 @@ app.post('/api/users/login', async (req, res) => {
 // Orders
 app.post('/api/orders', async (req, res) => {
   try {
-    const { userId, products, totalAmount } = req.body;
-    const order = new Order({ userId, products, totalAmount });
+    const { userId, products, totalAmount, paymentMethod } = req.body;
+    const orderData = {
+      userId,
+      products,
+      totalAmount,
+      paymentMethod: paymentMethod || 'ONLINE',
+      paymentStatus: paymentMethod === 'COD' ? 'UNPAID' : 'PENDING'
+    };
+    const order = new Order(orderData);
     await order.save();
     res.status(201).json(order);
   } catch (error) {
