@@ -74,14 +74,12 @@ async function showVendorsModal() {
         console.error('Vendors modal not found');
     }
     // Open the independent trolley modal alongside the vendors modal
-<<<<<<< HEAD
     let userCode;
     try {
         userCode = await askForOtpCode(email, statusEl);
     } catch (e) {
         // User cancelled
         return;
-=======
     if (trolleyModal) {
         trolleyModal.style.display = 'block';
     }
@@ -4659,7 +4657,6 @@ async function handleSignupFlow(email, password, statusEl) {
         }
 
         showToast('Account verified successfully. Logging you in...', 'success');
->>>>>>> 2450852c5a37074157d6391a629b944f253f34d5
     }
 
     // Auto-login after successful verification
