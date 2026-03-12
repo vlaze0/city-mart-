@@ -20,7 +20,7 @@
 
     <main class="static-page">
         <div class="container">
-            <h1>Thank you! Your payment was successful.</h1>
+            <h1 id="payment-success-heading">Thank you! Your payment was successful.</h1>
             <p id="payment-success-text">We are confirming your order details...</p>
             <p>
                 You can view your order any time from the <strong>My Orders</strong> section after logging in.
@@ -36,16 +36,30 @@
     </footer>
 
     <script>
-        // Read orderId from query string (if present) and show it
+        // Read query params and adjust messaging for COD vs online payment
         (function () {
-            const el = document.getElementById('payment-success-text');
-            if (!el) return;
+            const headingEl = document.getElementById('payment-success-heading');
+            const textEl = document.getElementById('payment-success-text');
+            if (!headingEl || !textEl) return;
+
             const params = new URLSearchParams(window.location.search);
             const orderId = params.get('orderId');
-            if (orderId) {
-                el.textContent = `Your order has been confirmed. Order ID: ${orderId}`;
+            const method = (params.get('method') || '').toLowerCase();
+
+            const hasOrderId = !!orderId;
+            const orderSuffix = hasOrderId ? ` Order ID: ${orderId}` : '';
+
+            if (method === 'cod') {
+                // Cash on Delivery: emphasize order placement, not payment.
+                document.title = 'Order Placed - City Mart';
+                headingEl.textContent = 'Thank you! Your order was placed successfully.';
+                textEl.textContent = `Your Cash on Delivery order has been confirmed.${orderSuffix}`;
             } else {
-                el.textContent = 'Your order has been confirmed.';
+                // Default / online payment case.
+                headingEl.textContent = 'Thank you! Your payment was successful.';
+                textEl.textContent = hasOrderId
+                    ? `Your order has been confirmed. Order ID: ${orderId}`
+                    : 'Your order has been confirmed.';
             }
         })();
     </script>

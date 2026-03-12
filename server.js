@@ -17,7 +17,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+// configure CORS with explicit settings to avoid cross‑device/browser problems
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN || 'https://www.citymart.net.in',
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin (e.g. mobile apps, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn('CORS request from disallowed origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type','Authorization'],
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -43,10 +61,24 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Razorpay client (credentials are read from environment variables)
-const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize only if credentials are provided (for development mode)
+let razorpayInstance = null;
+const rzpKeyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+const rzpKeySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+console.log('Razorpay env vars:', 'KEY_ID length=', rzpKeyId.length || 'none',
+            'SECRET length=', rzpKeySecret.length || 'none');
+if (rzpKeyId && rzpKeySecret && rzpKeyId !== 'your_razorpay_key_id') {
+  if (!rzpKeyId.startsWith('rzp_test_') && !rzpKeyId.startsWith('rzp_live_')) {
+    console.warn('⚠️  RAZORPAY_KEY_ID does not start with rzp_test_ or rzp_live_ — credentials may be invalid.');
+  }
+  razorpayInstance = new Razorpay({
+    key_id: rzpKeyId,
+    key_secret: rzpKeySecret,
+  });
+  console.log('Razorpay payment gateway initialized (' + (rzpKeyId.startsWith('rzp_live_') ? 'LIVE' : 'TEST') + ' mode)');
+} else {
+  console.warn('⚠️  Razorpay credentials not configured. Payment features will be disabled.');
+}
 
 // Nodemailer SMTP transporter for sending OTP emails
 // This is configured via environment variables so that the same code
@@ -399,13 +431,24 @@ app.post('/api/users/request-signup-code', async (req, res) => {
         verificationCodeExpiresAt,
         isVerified: false,
       });
-	  
-	  await sendOTPEmail(email, verificationCode );
-
-
-    await user.save();
     }
 
+    // If email service is not configured, auto-verify the user (dev mode)
+    const isEmailConfigured = process.env.BREVO_API_KEY && process.env.BREVO_API_KEY !== 'your_brevo_api_key';
+
+    if (!isEmailConfigured) {
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      user.verificationCodeExpiresAt = undefined;
+      await user.save();
+      return res.status(201).json({
+        message: 'Account created successfully (email verification skipped in dev mode).',
+        autoVerified: true,
+      });
+    }
+
+    await user.save();
+    await sendOTPEmail(email, verificationCode);
 
     res.status(201).json({
       message: 'Verification code sent to your email. Please enter it to complete signup.',
@@ -890,9 +933,16 @@ app.delete('/api/admin/reviews/:id', authenticateToken, requireAdmin, async (req
 
 // Create a Razorpay order for the payable amount (in INR)
 app.post('/api/payments/create-order', async (req, res) => {
+  console.log('[create-order] HIT — body:', JSON.stringify(req.body));
   try {
+    if (!razorpayInstance) {
+      console.error('[create-order] Razorpay instance is NULL');
+      return res.status(503).json({ message: 'Online payment is currently unavailable. Please use Cash on Delivery.' });
+    }
+
     const { amount } = req.body;
     const numericAmount = Number(amount);
+    console.log('[create-order] amount:', amount, 'numericAmount:', numericAmount);
     if (!numericAmount || numericAmount <= 0) {
       return res.status(400).json({ message: 'Valid amount is required to create order' });
     }
@@ -903,17 +953,23 @@ app.post('/api/payments/create-order', async (req, res) => {
       receipt: `rcpt_${Date.now()}`,
     };
 
+    console.log('[create-order] Calling Razorpay API with options:', JSON.stringify(options));
     const order = await razorpayInstance.orders.create(options);
+    console.log('[create-order] Razorpay order created:', order.id);
 
     return res.json({
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID,
+      key: rzpKeyId,
     });
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    return res.status(500).json({ message: 'Failed to create payment order' });
+    console.error('[create-order] ERROR:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    const razorpayError = error?.error || {};
+    const statusCode = razorpayError.code === 'BAD_REQUEST_ERROR' ? 400 : 500;
+    const detail = razorpayError.description || error?.message || 'Unknown error';
+    const code = razorpayError.code || error?.code || undefined;
+    return res.status(statusCode).json({ message: 'Failed to create payment order', detail, code });
   }
 });
 
@@ -935,7 +991,7 @@ app.post('/api/payments/verify', async (req, res) => {
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', rzpKeySecret)
       .update(body.toString())
       .digest('hex');
 

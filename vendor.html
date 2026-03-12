@@ -492,7 +492,7 @@
             if (!confirm('Confirm this order for your products?')) return;
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/vendor/orders/' + orderId + '/confirm', {
                     method: 'PUT',
                     headers: {
@@ -546,7 +546,7 @@
             listEl.innerHTML = '';
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/orders', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -601,7 +601,7 @@
 
             try {
                 // If opened as file://, hit localhost explicitly
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/vendor/profile', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -644,7 +644,7 @@
 
         async function setProductStockStatus(product, inStock) {
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
 
                 // Mirror the fields used in handleVendorProductSubmit so the backend
                 // receives a complete product payload (avoids NaN price errors).
@@ -699,7 +699,7 @@
             if (!confirm('Are you sure you want to delete this product?')) return;
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/products/' + productId, {
                     method: 'DELETE',
                     headers: {

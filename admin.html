@@ -837,7 +837,7 @@
             const revenueEl = document.getElementById('summary-total-revenue');
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/admin/summary', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -870,7 +870,7 @@
             tbody.innerHTML = '';
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const dateFromInput = document.getElementById('filter-date-from');
                 const dateToInput = document.getElementById('filter-date-to');
                 const params = new URLSearchParams();
@@ -915,7 +915,7 @@
             if (!confirm('Cancel this order?')) return;
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/orders/' + orderId + '/cancel', {
                     method: 'PUT',
                     headers: {
@@ -963,7 +963,7 @@
             tbody.innerHTML = '';
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/orders', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -999,7 +999,7 @@
             if (!confirm('Confirm this order?')) return;
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/orders/' + orderId + '/confirm', {
                     method: 'PUT',
                     headers: {
@@ -1115,7 +1115,7 @@
             if (emptyEl) emptyEl.style.display = 'none';
 
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/admin/customer-stats', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -1205,7 +1205,7 @@
 
         async function toggleUserBlock(userId, shouldBlock) {
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + `/api/admin/users/${userId}/${shouldBlock ? 'block' : 'unblock'}`, {
                     method: 'PUT',
                     headers: {
@@ -1233,7 +1233,7 @@
             if (loadingEl) loadingEl.style.display = 'block';
             if (errorEl) errorEl.style.display = 'none';
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/admin/users', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),
@@ -1309,7 +1309,7 @@
 
         async function deleteReview(reviewId) {
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/admin/reviews/' + reviewId, {
                     method: 'DELETE',
                     headers: {
@@ -1337,7 +1337,7 @@
             if (loadingEl) loadingEl.style.display = 'block';
             if (errorEl) errorEl.style.display = 'none';
             try {
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const resp = await fetch(apiBase + '/api/admin/reviews', {
                     headers: {
                         'Authorization': 'Bearer ' + (window.authToken || ''),

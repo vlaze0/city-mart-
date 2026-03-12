@@ -29,6 +29,7 @@
                         <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
                         <li><a href="#" onclick="closeAllOverlays(); handleProfileNavClick(event)">Profile</a></li>
                         <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
+                        <li><a href="#" onclick="closeAllOverlays(); showOrdersModal(); return false;">My Orders</a></li>
                         <li class="user-menu">
                             <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
                             <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
@@ -50,6 +51,7 @@
                 <a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a>
                 <a href="#" onclick="closeAllOverlays(); handleProfileNavClick(event)">Profile</a>
                 <a href="index.html#contact" onclick="closeAllOverlays()">Contact</a>
+                <a href="#" onclick="closeAllOverlays(); showOrdersModal(); return false;">My Orders</a>
                 <a href="#" onclick="closeAllOverlays(); showLoginOptions(); return false;">Login</a>
             </div>
         </div>
@@ -78,7 +80,7 @@
 
             try {
                 // If the page is opened as file://, call the API via http://localhost:3000 explicitly
-                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
                 const response = await fetch(`${apiBase}/api/products`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch products');
@@ -576,6 +578,35 @@
                     </ul>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Orders Modal -->
+    <div id="orders-modal" class="orders-modal">
+        <div class="orders-content">
+            <span class="close" onclick="closeOrdersModal()">&times;</span>
+            <h2>📦 My Orders</h2>
+            <p id="orders-subtitle" class="orders-subtitle"></p>
+            <div class="orders-filters">
+                <div class="orders-filter-group">
+                    <label for="orders-status-filter">Status</label>
+                    <select id="orders-status-filter">
+                        <option value="all">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="orders-filter-group">
+                    <label for="orders-from-date">From</label>
+                    <input type="date" id="orders-from-date">
+                </div>
+                <div class="orders-filter-group">
+                    <label for="orders-to-date">To</label>
+                    <input type="date" id="orders-to-date">
+                </div>
+            </div>
+            <div id="orders-list" class="orders-list"></div>
         </div>
     </div>
 
