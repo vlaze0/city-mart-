@@ -1515,7 +1515,7 @@ async function handleCheckoutFormSubmission(e) {
         const createRes = await fetch(API_BASE + '/api/payments/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: finalAmount }),
+            body: JSON.stringify({ amount: finalAmount*100}),
         });
 
         if (!createRes.ok) {
@@ -1566,7 +1566,7 @@ async function handleCheckoutFormSubmission(e) {
                             razorpay_signature: response.razorpay_signature,
                             userId,
                             products: productsPayload,
-                            amount: finalAmount,
+                            amount: finalAmount*100,
                         }),
                     });
 
