@@ -32,7 +32,7 @@ function addToCart(id, name, price, category = null, image = null, options = {})
 }
 
 // Cart array to store items
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("citymart_cart")) || [];
 let pendingProduct = null;
 let toastContainer = null;
 // Simple wallet balance stored in localStorage profile (citymart_profile.walletBalance)
