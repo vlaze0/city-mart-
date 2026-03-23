@@ -1298,6 +1298,8 @@ function selectGender(gender) {
         } else {
             cart.push({ id, name, price, quantity: 1, gender, category, image });
         }
+        saveCartToStorage();
+
         updateCartCount();
         updateCartDisplay();
         showToast(`${name} (${gender}) added to cart`, 'success');
