@@ -1010,8 +1010,19 @@ function logout() {
     try {
         localStorage.removeItem('citymart_token');
         localStorage.removeItem('citymart_user');
+        localStorage.removeItem('citymart_cart');
+        localStorage.removeItem('citymart_profile');
     } catch (e) {
         console.warn('Could not clear localStorage', e);
+    }
+    if (typeof cart !== 'undefined') {
+        cart = [];
+    }
+    if (typeof updateCartCount === 'function') {
+        updateCartCount();
+    }
+    if (typeof updateCartDisplay === 'function') {
+        try { updateCartDisplay(); } catch(e) {}
     }
     updateAuthUI();
     showToast('Logged out successfully.', 'success');
@@ -3550,8 +3561,19 @@ function logout() {
     try {
         localStorage.removeItem('citymart_token');
         localStorage.removeItem('citymart_user');
+        localStorage.removeItem('citymart_cart');
+        localStorage.removeItem('citymart_profile');
     } catch (e) {
         console.warn('Could not clear localStorage', e);
+    }
+    if (typeof cart !== 'undefined') {
+        cart = [];
+    }
+    if (typeof updateCartCount === 'function') {
+        updateCartCount();
+    }
+    if (typeof updateCartDisplay === 'function') {
+        try { updateCartDisplay(); } catch(e) {}
     }
     updateAuthUI();
     showToast('Logged out successfully.', 'success');
