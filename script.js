@@ -2617,7 +2617,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (mainCatSelect && subCatSelect) {
         mainCatSelect.addEventListener('change', applyVendorCategoryState);
-        subCatSelect.addEventListener('change', applyVendorCategoryState);
         // Initialize state on first load (in case values are already selected)
         applyVendorCategoryState();
     }
