@@ -2496,7 +2496,7 @@ footer {
 .cart-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -2982,7 +2982,7 @@ footer {
 .vendor-products-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -3025,7 +3025,7 @@ footer {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -3068,7 +3068,7 @@ footer {
 .add-product-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -3343,7 +3343,7 @@ footer {
 .login-options-modal {
     display: none;
     position: fixed;
-    z-index: 1001;
+    z-index: 7001;
     left: 0;
     top: 0;
     width: 100%;
@@ -3406,7 +3406,7 @@ footer {
 .auth-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -3822,7 +3822,7 @@ footer {
 .orders-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
@@ -4024,7 +4024,7 @@ footer {
 .gender-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 7000;
     left: 0;
     top: 0;
     width: 100%;
