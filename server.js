@@ -37,8 +37,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type','Authorization'],
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname), { maxAge: '1d' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
