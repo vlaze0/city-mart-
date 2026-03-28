@@ -1039,6 +1039,26 @@ function updateAuthUI() {
         }
     });
 
+    const mobileLink = document.getElementById('mobile-login-link');
+    if (mobileLink) {
+        if (currentUser) {
+            mobileLink.textContent = 'Logout';
+            mobileLink.onclick = function(e) {
+                e.preventDefault();
+                closeAllOverlays();
+                if (typeof logoutFromMenu === 'function') logoutFromMenu();
+                else logout();
+            };
+        } else {
+            mobileLink.textContent = 'Login';
+            mobileLink.onclick = function(e) {
+                e.preventDefault();
+                closeAllOverlays();
+                showLoginOptions();
+            };
+        }
+    }
+
     const userMenuToggle = document.getElementById('user-menu-toggle');
     const userMenuDropdown = document.getElementById('user-menu-dropdown');
 
@@ -3588,6 +3608,26 @@ function updateAuthUI() {
             link.textContent = 'Login';
         }
     });
+
+    const mobileLink = document.getElementById('mobile-login-link');
+    if (mobileLink) {
+        if (currentUser) {
+            mobileLink.textContent = 'Logout';
+            mobileLink.onclick = function(e) {
+                e.preventDefault();
+                closeAllOverlays();
+                if (typeof logoutFromMenu === 'function') logoutFromMenu();
+                else logout();
+            };
+        } else {
+            mobileLink.textContent = 'Login';
+            mobileLink.onclick = function(e) {
+                e.preventDefault();
+                closeAllOverlays();
+                showLoginOptions();
+            };
+        }
+    }
 
     const userMenuToggle = document.getElementById('user-menu-toggle');
     const userMenuDropdown = document.getElementById('user-menu-dropdown');
