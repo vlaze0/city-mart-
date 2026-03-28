@@ -231,6 +231,105 @@ const reviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model('Review', reviewSchema);
 
+// Function to send email to a vendor about new order
+async function sendVendorOrderNotificationEmail(vendorEmail, vendorName, orderId, productsList, customerInfo) {
+  if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY === 'your_brevo_api_key') {
+    console.log(`[DEV] Skipping vendor email for ${vendorEmail} (Email service not configured)`);
+    return;
+  }
+
+  try {
+    const productsHtml = productsList.map(p => `
+      <li>
+        <strong>${p.name}</strong><br/>
+        Quantity: ${p.quantity}<br/>
+        Price: ₹${p.price}
+      </li>
+    `).join('');
+
+    const customerHtml = customerInfo ? `
+      <h3>Customer Details:</h3>
+      <p>Name: ${customerInfo.username || 'N/A'}</p>
+      <p>Email: ${customerInfo.email || 'N/A'}</p>
+      <p>Phone: ${customerInfo.phone || 'N/A'}</p>
+    ` : '';
+
+    await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: {
+          email: process.env.BREVO_SENDER || 'no-reply@citymart.net.in',
+          name: 'CityMart Orders'
+        },
+        to: [{ email: vendorEmail, name: vendorName }],
+        subject: `New Order Received - Order #${orderId}`,
+        htmlContent: `
+          <h2>Hello ${vendorName},</h2>
+          <p>Great news! A customer just placed an order for your products.</p>
+          <h3>Order Details:</h3>
+          <ul>
+            ${productsHtml}
+          </ul>
+          ${customerHtml}
+          <p>Please check your vendor dashboard to process this order.</p>
+          <p>Thank you,<br/>The CityMart Team</p>
+        `
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log(`Order notification email sent to vendor: ${vendorEmail}`);
+  } catch (err) {
+    console.error('Brevo vendor email error:', err.response?.data || err.message);
+  }
+}
+
+async function notifyVendors(order) {
+  try {
+    const vendorGroups = {};
+    const populatedOrder = await Order.findById(order._id).populate('products.productId').populate('userId');
+
+    if (!populatedOrder) return;
+
+    for (const item of populatedOrder.products) {
+      if (!item.productId) continue;
+      
+      const vendorId = item.productId.vendorId;
+      if (!vendorId) continue;
+
+      if (!vendorGroups[vendorId]) {
+        vendorGroups[vendorId] = [];
+      }
+      vendorGroups[vendorId].push({
+        name: item.productId.name,
+        quantity: item.quantity,
+        price: item.price || 0
+      });
+    }
+
+    const customerInfo = populatedOrder.userId;
+
+    for (const vendorId in vendorGroups) {
+      const vendor = await User.findById(vendorId);
+      if (vendor && vendor.email) {
+        await sendVendorOrderNotificationEmail(
+          vendor.email, 
+          vendor.username, 
+          order._id, 
+          vendorGroups[vendorId],
+          customerInfo
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error notifying vendors:', error);
+  }
+}
+
 // Routes
 
 // Products
@@ -599,6 +698,10 @@ app.post('/api/orders', async (req, res) => {
     const { userId, products, totalAmount } = req.body;
     const order = new Order({ userId, products, totalAmount });
     await order.save();
+    
+    // Notify vendors about the new order asynchronously
+    notifyVendors(order);
+
     res.status(201).json(order);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -1009,6 +1112,9 @@ app.post('/api/payments/verify', async (req, res) => {
     });
 
     await order.save();
+
+    // Notify vendors about the new order asynchronously
+    notifyVendors(order);
 
     return res.json({
       success: true,
