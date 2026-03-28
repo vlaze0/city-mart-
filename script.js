@@ -10,6 +10,16 @@ console.log('Script loaded');
 
 // Function to add item to cart
 function addToCart(id, name, price, category = null, image = null, options = {}) {
+    if (!currentUser || currentUser.role !== 'customer') {
+        showToast('Please login as a customer to add items to your cart.', 'error');
+        if (typeof showLoginOptions === 'function') {
+            showLoginOptions();
+        } else if (typeof startLoginAs === 'function') {
+            startLoginAs('customer');
+        }
+        return;
+    }
+
     const { gender = null, size = null, skipGenderModal = false } = options || {};
 
     // Check if it's a pet product (gender selection flow)
@@ -94,6 +104,16 @@ function closeVendorsModal() {
 
 // Function to show cart modal
 function showCartModal() {
+    if (!currentUser || currentUser.role !== 'customer') {
+        showToast('Please login as a customer to view your cart.', 'error');
+        if (typeof showLoginOptions === 'function') {
+            showLoginOptions();
+        } else if (typeof startLoginAs === 'function') {
+            startLoginAs('customer');
+        }
+        return;
+    }
+
     const modal = document.getElementById('cart-modal');
     if (modal) {
         updateCartDisplay();
