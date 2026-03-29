@@ -16,6 +16,9 @@ const { authenticateToken, requireAdmin, requireVendor, requireCustomer, require
 require('dotenv').config();
 
 const app = express();
+app.get('/api/debug-env', (req, res) => {
+  res.json({ keys: Object.keys(process.env).filter(k => k.includes('GEMINI')) });
+});
 const PORT = process.env.PORT || 3000;
 
 // Middleware

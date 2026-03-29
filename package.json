@@ -2,6 +2,9 @@
   "name": "city-mart-backend",
   "version": "1.0.0",
   "description": "Backend for City Mart ecommerce website",
+  "engines": {
+    "node": ">=18"
+  },
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
