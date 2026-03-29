@@ -179,6 +179,7 @@ const productSchema = new mongoose.Schema({
   discount: String,
   features: String,
   deliveryTime: String,
+  city: String,          // Added for location-based filtering
   // The vendor who created this product (null/undefined for legacy seeded products)
   vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
@@ -192,6 +193,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'vendor', 'customer'], default: 'customer' },
   phone: { type: String },
+  city: { type: String },
+
   // Stores a bcrypt hash of the one-time verification code (never the raw code)
   verificationCode: { type: String },
   // Expiry timestamp for the verification code (e.g. 5 minutes from generation)
@@ -335,7 +338,11 @@ async function notifyVendors(order) {
 // Products
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await Product.find();
+    const filter = {};
+    if (req.query.city) {
+      filter.city = new RegExp(`^${req.query.city}$`, 'i');
+    }
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -366,6 +373,12 @@ app.post('/api/products', authenticateToken, requireAdminOrVendor, upload.array(
     // and manage only their own products on the vendor dashboard.
     const vendorId = req.user.role === 'vendor' ? req.user.userId : undefined;
 
+    let city = '';
+    if (vendorId) {
+      const vendorUser = await User.findById(vendorId);
+      if (vendorUser && vendorUser.city) city = vendorUser.city;
+    }
+
     const product = new Product({
       name,
       price: parseFloat(price),
@@ -380,6 +393,7 @@ app.post('/api/products', authenticateToken, requireAdminOrVendor, upload.array(
       features,
       deliveryTime,
       vendorId,
+      city,
     });
 
     await product.save();
@@ -465,7 +479,7 @@ app.get('/api/vendor/products', authenticateToken, requireVendor, async (req, re
 // Direct register (without code) can still be used by admin tools if needed
 app.post('/api/users/register', async (req, res) => {
   try {
-    const { username, email, password, role, phone } = req.body;
+    const { username, email, password, role, phone, city } = req.body;
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: 'User already exists with this email' });
@@ -477,6 +491,7 @@ app.post('/api/users/register', async (req, res) => {
       password: hashedPassword,
       role: role || 'customer',
       phone,
+      city,
       isVerified: true,
     });
     await user.save();
@@ -489,7 +504,7 @@ app.post('/api/users/register', async (req, res) => {
 // Step 1: Request verification code for signup
 app.post('/api/users/request-signup-code', async (req, res) => {
   try {
-    const { username, email, password, role, phone } = req.body;
+    const { username, email, password, role, phone, city } = req.body;
     if (!email || !password || !username) {
       return res.status(422).json({ message: 'Username, email, and password are required' });
     }
@@ -514,6 +529,7 @@ app.post('/api/users/request-signup-code', async (req, res) => {
       user.password = hashedPassword;
       user.role = role || 'customer';
       user.phone = phone;
+      user.city = city;
       user.verificationCode = verificationCodeHash;
       user.verificationCodeExpiresAt = verificationCodeExpiresAt;
     } else {
@@ -524,6 +540,7 @@ app.post('/api/users/request-signup-code', async (req, res) => {
         password: hashedPassword,
         role: role || 'customer',
         phone,
+        city,
         verificationCode: verificationCodeHash,
         verificationCodeExpiresAt,
         isVerified: false,

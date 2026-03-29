@@ -1,3 +1,56 @@
+
+// --- City Selection Logic ---
+let selectedCity = localStorage.getItem('citymart_user_city') || 'Global';
+
+function initCitySelection() {
+    const displays = document.querySelectorAll('#current-city-display');
+    displays.forEach(d => {
+        d.textContent = selectedCity === 'Global' ? '🌍 Global' : selectedCity;
+    });
+}
+
+function openCityModal() {
+    const modal = document.getElementById('city-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function closeCityModal() {
+    const modal = document.getElementById('city-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function selectCity(city) {
+    selectedCity = city;
+    localStorage.setItem('citymart_user_city', city);
+    initCitySelection();
+    closeCityModal();
+    if (window.location.pathname.includes('products.html')) {
+        window.location.reload();
+    } else if (typeof fetchProducts === 'function') {
+        window.location.reload(); 
+    }
+}
+
+function filterCities() {
+    const input = document.getElementById('city-search');
+    if (!input) return;
+    const filter = input.value.toUpperCase();
+    const ul = document.getElementById('city-list');
+    if (!ul) return;
+    const li = ul.getElementsByTagName('li');
+    for (let i = 0; i < li.length; i++) {
+        const txtValue = li[i].textContent || li[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            li[i].style.display = '';
+        } else {
+            li[i].style.display = 'none';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initCitySelection);
+// -----------------------------
+
 const API_BASE =
   window.location.protocol === 'file:'
     ? 'http://localhost:4000'
@@ -2821,7 +2874,7 @@ async function handleSignupFlow(email, password, statusEl) {
     const resp = await fetch('/api/users/request-signup-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({ username, email, password, role, city: (document.getElementById('login-city') ? document.getElementById('login-city').value : '') }),
     });
 
     const data = await resp.json();
