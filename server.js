@@ -38,7 +38,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type','Authorization'],
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname), { maxAge: '1d' }));
+app.use(express.static(path.join(__dirname), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
 
 // Configure multer for file uploads
