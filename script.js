@@ -4896,7 +4896,7 @@ async function sendChatMessage() {
             let errorText = "I'm sorry, I'm having trouble connecting to my brain right now.";
             try {
                 const errData = await response.json();
-                if (errData.error) errorText = \`Server Error: \${errData.error}\`;
+                if (errData.error) errorText = `Server Error: ${errData.error}`;
             } catch(e) {}
             appendChatBubble(errorText, 'assistant');
             return;
