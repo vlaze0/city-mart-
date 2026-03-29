@@ -9,6 +9,7 @@
     "start-city-mart-server": "node server.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.7.0",
     "bcryptjs": "^2.4.3",
     "city-mart-backend": "file:",

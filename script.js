@@ -1,6 +1,6 @@
 const API_BASE =
   window.location.protocol === 'file:'
-    ? 'http://localhost:4000'
+    ? 'http://localhost:3000'
     : window.location.origin; // use current host (e.g. citymart.net.in) when deployed
 
 
@@ -4785,3 +4785,94 @@ async function handleSignupFlow(email, password, statusEl) {
     closeAuthModal();
 }
 
+// --- AI Chatbot Logic ---
+let chatMessages = [];
+
+function toggleChatbot() {
+    const windowEl = document.getElementById('chatbot-window');
+    const toggleIcon = document.querySelector('.chatbot-icon');
+    if (!windowEl || !toggleIcon) return;
+    
+    if (windowEl.style.display === 'none' || windowEl.style.display === '') {
+        windowEl.style.display = 'flex';
+        toggleIcon.textContent = '✖';
+    } else {
+        windowEl.style.display = 'none';
+        toggleIcon.textContent = '💬';
+    }
+}
+
+function handleChatInput(e) {
+    if (e.key === 'Enter') {
+        sendChatMessage();
+    }
+}
+
+async function sendChatMessage() {
+    const inputEl = document.getElementById('chatbot-input');
+    if (!inputEl) return;
+    
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    inputEl.value = '';
+
+    appendChatBubble(text, 'user');
+    chatMessages.push({ role: 'user', content: text });
+
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const typingId = 'typing-' + Date.now();
+    messagesContainer.innerHTML += `
+        <div class="chat-message assistant" id="${typingId}">
+            <div class="chat-bubble" style="background:transparent; color:#888;">Typing...</div>
+        </div>
+    `;
+    scrollToChatBottom();
+
+    try {
+        const response = await fetch(API_BASE + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: chatMessages })
+        });
+        
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+
+        if (!response.ok) {
+            appendChatBubble("I'm sorry, I'm having trouble connecting to my brain right now.", 'assistant');
+            return;
+        }
+
+        const data = await response.json();
+        const reply = data.reply;
+        
+        chatMessages.push({ role: 'assistant', content: reply });
+        appendChatBubble(reply, 'assistant');
+    } catch (error) {
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+        console.error("Chat error:", error);
+        appendChatBubble("Network error. Please try again.", 'assistant');
+    }
+}
+
+function appendChatBubble(text, sender) {
+    const container = document.getElementById('chatbot-messages');
+    if (!container) return;
+    
+    const formattedText = text.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+    container.innerHTML += `
+        <div class="chat-message ${sender}">
+            <div class="chat-bubble">${formattedText}</div>
+        </div>
+    `;
+    scrollToChatBottom();
+}
+
+function scrollToChatBottom() {
+    const container = document.getElementById('chatbot-messages');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
