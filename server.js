@@ -25,6 +25,8 @@ const PORT = process.env.PORT || 3000;
 // configure CORS with explicit settings to avoid cross‑device/browser problems
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN || 'https://www.citymart.net.in',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
 ];
 app.use(cors({
   origin: (origin, callback) => {
@@ -1314,14 +1316,33 @@ ${catalogText}
     
     const latestMessage = messages[messages.length - 1].content;
 
-    const advancedModel = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt 
-    });
-
-    const chat = advancedModel.startChat({ history });
-    const result = await chat.sendMessage(latestMessage);
-    const responseText = result.response.text();
+    let responseText = "";
+    try {
+      const advancedModel = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        systemInstruction: systemPrompt 
+      });
+      const chat = advancedModel.startChat({ history });
+      const result = await chat.sendMessage(latestMessage);
+      responseText = result.response.text();
+    } catch (e) {
+      console.warn("Falling back to gemini-pro due to error:", e.message);
+      // Fallback to gemini-pro which universally works regardless of region
+      const fallbackModel = genAI.getGenerativeModel({ 
+        model: "gemini-pro"
+      });
+      
+      // Inject system instructions logically as the first context turn
+      const fallbackHistory = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: "Understood. I'm ready to assist." }] },
+        ...history
+      ];
+      
+      const fallbackChat = fallbackModel.startChat({ history: fallbackHistory });
+      const fallbackResult = await fallbackChat.sendMessage(latestMessage);
+      responseText = fallbackResult.response.text();
+    }
 
     res.json({ reply: responseText });
   } catch (error) {
