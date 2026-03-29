@@ -1347,7 +1347,7 @@ ${catalogText}
     res.json({ reply: responseText });
   } catch (error) {
     console.error('Chat API Error:', error);
-    res.status(500).json({ error: 'Failed to generate response.' });
+    res.status(500).json({ error: error.message || 'Failed to generate response.' });
   }
 });
 
