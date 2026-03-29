@@ -1,3 +1,4 @@
+// Force trigger Render auto-deploy
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,11 +10,15 @@ const crypto = require('crypto');
 const Razorpay = require('razorpay');
 //const nodemailer = require('nodemailer');
 const axios = require('axios');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const { authenticateToken, requireAdmin, requireVendor, requireCustomer, requireAdminOrVendor } = require('./middleware');
 require('dotenv').config();
 
 const app = express();
+app.get('/api/debug-env', (req, res) => {
+  res.json({ keys: Object.keys(process.env).filter(k => k.includes('GEMINI')) });
+});
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -37,7 +42,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type','Authorization'],
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname), { maxAge: '1d' }));
+app.use(express.static(path.join(__dirname), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
 
 // Configure multer for file uploads
@@ -53,7 +66,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/citymart', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -1255,6 +1268,65 @@ app.put('/api/my-orders/:id/cancel', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error cancelling customer order:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// --- AI Chatbot Endpoint ---
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured.' });
+    }
+
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Fetch product catalog to build context
+    const products = await Product.find({}, 'name price description category discount brand features').lean();
+    
+    // Create a compact catalog text
+    let catalogText = "Available Store Products:\\n";
+    products.forEach(p => {
+      catalogText += `- ${p.name} (Price: ₹${p.price}, Category: ${p.category || 'N/A'}). Desc: ${p.description || ''}. Discount: ${p.discount || 'None'}\\n`;
+    });
+
+    const systemPrompt = `You are the City Mart AI Shopping Assistant. 
+You are helpful, polite, and enthusiastic. Use the following product database to answer customer questions. 
+If a user asks for recommendations, suggest items based on these products. If they ask about delivery, the default is 3-5 days unless specified.
+If a user asks something completely unrelated to shopping or the store, politely steer them back.
+Format your responses keeping them concise and friendly.
+DO NOT hallucinate products that are not in the database below.
+
+Database:
+${catalogText}
+`;
+
+    const history = messages.slice(0, -1).map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+    
+    const latestMessage = messages[messages.length - 1].content;
+
+    const advancedModel = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: systemPrompt 
+    });
+
+    const chat = advancedModel.startChat({ history });
+    const result = await chat.sendMessage(latestMessage);
+    const responseText = result.response.text();
+
+    res.json({ reply: responseText });
+  } catch (error) {
+    console.error('Chat API Error:', error);
+    res.status(500).json({ error: 'Failed to generate response.' });
   }
 });
 
