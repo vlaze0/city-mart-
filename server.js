@@ -1288,10 +1288,29 @@ app.post('/api/chat', async (req, res) => {
       model: "gemini-2.5-flash"
     });
 
-    // 👉 last message user ka uthao
-    const lastMessage = messages[messages.length - 1].content;
+    // Fetch product catalog to build context
+    const products = await Product.find({}, 'name price description category discount brand features').lean();
+    
+    let catalogText = "Available Store Products:\\n";
+    products.forEach(p => {
+      catalogText += `- ${p.name} (Price: ₹${p.price}, Category: ${p.category || 'N/A'}). Desc: ${p.description || ''}. Discount: ${p.discount || 'None'}\\n`;
+    });
 
-    const result = await model.generateContent(lastMessage);
+    const systemPrompt = `You are the City Mart AI Shopping Assistant. 
+You are helpful, polite, and enthusiastic. Use the following product database to answer customer questions. 
+If a user asks for recommendations, suggest items based on these products. If they ask about delivery, the default is 3-5 days unless specified.
+If a user asks something completely unrelated to shopping or the store, politely steer them back.
+Format your responses keeping them concise and friendly.
+DO NOT hallucinate products that are not in the database below.
+
+Database:
+${catalogText}
+`;
+
+    const lastMessage = messages[messages.length - 1].content;
+    const finalPrompt = systemPrompt + "\\n\\nCustomer Question:\\n" + lastMessage;
+
+    const result = await model.generateContent(finalPrompt);
     const response = await result.response;
 
     res.json({
