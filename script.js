@@ -4919,7 +4919,9 @@ function appendChatBubble(text, sender) {
     const container = document.getElementById('chatbot-messages');
     if (!container) return;
 
-    const formattedText = text.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+    // Convert bold, markdown bullets and newlines to HTML equivalents
+    let formattedText = text.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+    formattedText = formattedText.replace(/^\\* /gm, '&bull; ').replace(/(<br>)\\* /g, '$1&bull; ');
     container.innerHTML += `
         <div class="chat-message ${sender}">
             <div class="chat-bubble">${formattedText}</div>
