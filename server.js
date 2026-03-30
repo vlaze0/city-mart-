@@ -1277,72 +1277,30 @@ app.put('/api/my-orders/:id/cancel', authenticateToken, async (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'Messages array is required and cannot be empty.' });
+
+    if (!messages || !messages.length) {
+      return res.status(400).json({ error: "Messages required" });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
-    }
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // Fetch product catalog to build context
-    const products = await Product.find({}, 'name price description category discount brand features').lean();
-    
-    // Create a compact catalog text
-    let catalogText = "Available Store Products:\\n";
-    products.forEach(p => {
-      catalogText += `- ${p.name} (Price: ₹${p.price}, Category: ${p.category || 'N/A'}). Desc: ${p.description || ''}. Discount: ${p.discount || 'None'}\\n`;
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash"
     });
 
-    const systemPrompt = `You are the City Mart AI Shopping Assistant. 
-You are helpful, polite, and enthusiastic. Use the following product database to answer customer questions. 
-If a user asks for recommendations, suggest items based on these products. If they ask about delivery, the default is 3-5 days unless specified.
-If a user asks something completely unrelated to shopping or the store, politely steer them back.
-Format your responses keeping them concise and friendly.
-DO NOT hallucinate products that are not in the database below.
+    // 👉 last message user ka uthao
+    const lastMessage = messages[messages.length - 1].content;
 
-Database:
-${catalogText}
-`;
+    const result = await model.generateContent(lastMessage);
+    const response = await result.response;
 
-    // Extract the very last message from the user
-    const latestMessage = messages[messages.length - 1].content;
-    
-    // Format the previous messages into the exact history format Gemini 1.5 expects
-    let history = messages.slice(0, -1).map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }));
-
-    // CRITICAL FIX: Gemini 1.5 Flash STRICTLY requires that the history starts with a 'user' message!
-    if (history.length > 0 && history[0].role !== 'user') {
-      history.unshift({ role: 'user', parts: [{ text: 'Hello, please act as my City Mart shopping assistant.' }] });
-    }
-
-    try {
-      const advancedModel = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: systemPrompt 
-      });
-      
-      const chat = advancedModel.startChat({ history });
-      const result = await chat.sendMessage(latestMessage);
-      const responseText = result.response.text();
-
-      res.json({ reply: responseText });
-    } catch (e) {
-      console.error("Gemini API Sub-Error:", e);
-      // Directly throw the internal error so it is caught by the master catch block below
-      throw new Error(`Google API Rejected Request: ${e.message}`);
-    }
+    res.json({
+      reply: response.text()
+    });
 
   } catch (error) {
-    console.error('Master Chat API Error:', error);
-    res.status(500).json({ error: error.message || 'Failed to generate response.' });
+    console.error("Chat API Error:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
