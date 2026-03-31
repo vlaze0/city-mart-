@@ -4922,6 +4922,27 @@ function appendChatBubble(text, sender) {
     // Convert bold, markdown bullets and newlines to HTML equivalents
     let formattedText = text.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
     formattedText = formattedText.replace(/^\\* /gm, '&bull; ').replace(/(<br>)\\* /g, '$1&bull; ');
+
+    // Scan for [[PRODUCT_CARD:id|name|price|image|benefit]]
+    const cardRegex = /\[\[PRODUCT_CARD:(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*?)\]\]/g;
+    formattedText = formattedText.replace(cardRegex, (match, id, name, price, img, benefit) => {
+        const imageUrl = img && img !== 'undefined' ? img : './images/placeholder.jpg';
+        return `
+            <div class="chat-product-card">
+                <img src="${imageUrl}" alt="${name}" onerror="this.src='./images/placeholder.jpg'">
+                <div class="chat-product-info">
+                    <h4>${name}</h4>
+                    <p class="chat-product-price">₹${price}</p>
+                    <p class="chat-product-benefit">${benefit}</p>
+                    <div class="chat-card-actions">
+                        <button class="chat-buy-btn" onclick="viewProductFromChat('${id}')">Details</button>
+                        <button class="chat-buy-btn primary" onclick="addToCartFromChat('${id}', '${name}', ${price}, '${imageUrl}')">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
     container.innerHTML += `
         <div class="chat-message ${sender}">
             <div class="chat-bubble">${formattedText}</div>
@@ -4929,6 +4950,21 @@ function appendChatBubble(text, sender) {
     `;
     scrollToChatBottom();
 }
+
+// Helper functions for chat interactions
+window.addToCartFromChat = function(id, name, price, image) {
+    // Reuse existing global addToCart logic
+    if (typeof addToCart === 'function') {
+        addToCart(id, name, price, null, image, { skipGenderModal: true });
+    } else {
+        console.error('addToCart function not found');
+    }
+};
+
+window.viewProductFromChat = function(id) {
+    // Navigate to products page with search id or just the products page
+    window.location.href = `products.html?id=${id}`;
+};
 
 function scrollToChatBottom() {
     const container = document.getElementById('chatbot-messages');

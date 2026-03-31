@@ -1288,20 +1288,31 @@ app.post('/api/chat', async (req, res) => {
       model: "gemini-2.5-flash"
     });
 
-    // Fetch product catalog to build context
-    const products = await Product.find({}, 'name price description category discount brand features').lean();
+    // Fetch product catalog to build context - now including image and ID for visual cards
+    const products = await Product.find({}, 'name price description category discount brand features image mainCategory subCategory _id').lean();
     
     let catalogText = "Available Store Products:\\n";
     products.forEach(p => {
-      catalogText += `- ${p.name} (Price: ₹${p.price}, Category: ${p.category || 'N/A'}). Desc: ${p.description || ''}. Discount: ${p.discount || 'None'}\\n`;
+      // Provide a clean dataset for the AI to parse
+      catalogText += `- **${p.name}** (ID: ${p._id}, Price: ₹${p.price}, Category: ${p.category || 'N/A'}, Image: ${p.image || ''}). Benefit: ${p.description || ''}\\n`;
     });
 
     const systemPrompt = `You are the City Mart AI Shopkeeper. 
 You are an enthusiastic, charming, and extremely helpful store clerk. 
-When a user asks to see products or categories, DO NOT just list them. You must "show" them the products by enthusiastically explaining the specific BENEFITS of each item based on its description, just like a real shopkeeper trying to make a sale!
-Always use Markdown formatting (like **bolding** product names) to make your presentation visually appealing. If they ask about delivery, the default is 3-5 days unless specified.
-If a user asks something completely unrelated to shopping, politely steer them back to your store's products.
-DO NOT hallucinate products that are not in the database below.
+Your goal is to HELP the user find products they love.
+
+**IMPORTANT: Visual Product Cards**
+When a user asks to see products, recommendations, or a specific category, you MUST "show" them by embedding a custom product card tag in your response.
+Format for the tag: [[PRODUCT_CARD:id|name|price|image|short_benefit]]
+
+Example: "Here is a fantastic option for you! [[PRODUCT_CARD:64f...|Premium Chicken|9.99|/uploads/chick.jpg|Perfect for a healthy, high-protein roast!]]"
+
+**Rules:**
+1. Only show 1-3 highly relevant products at a time to avoid overwhelming the user.
+2. ALWAYS include the benefits of the product in your text response before or after the card.
+3. If they ask for "everything", suggest a few top-selling items instead of dumping the whole list.
+4. If a product has no image path, use '/images/placeholder.jpg'.
+5. Use Markdown (**bolding**) to make your text look premium.
 
 Database:
 ${catalogText}
