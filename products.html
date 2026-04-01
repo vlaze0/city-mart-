@@ -439,19 +439,19 @@
                         <h3>Shipping Address</h3>
 
                         <label for="name">Full Name<span class="required">*</span></label>
-                        <input type="text" id="name" required>
+                        <input type="text" id="name" name="fullname" required>
 
                         <label for="phone">Phone Number<span class="required">*</span></label>
-                        <input type="tel" id="phone" required>
+                        <input type="tel" id="phone" name="phone" required>
 
                         <label for="email">Email address (optional)</label>
-                        <input type="email" id="email">
+                        <input type="email" id="email" name="email">
 
                         <label for="address">Address<span class="required">*</span></label>
-                        <textarea id="address" required></textarea>
+                        <textarea id="address" name="address" required></textarea>
 
                         <label for="order-notes">Order notes (optional)</label>
-                        <textarea id="order-notes" placeholder="Any delivery notes..."></textarea>
+                        <textarea id="order-notes" name="notes" placeholder="Any delivery notes..."></textarea>
 
                         <button type="submit" class="checkout-primary-btn">Place Order</button>
                     </form>
@@ -659,11 +659,13 @@
             <span class="close" onclick="closeAuthModal()">&times;</span>
             <h2 id="auth-modal-title">Login</h2>
             <form id="login-form">
-                <input type="text" id="login-username" placeholder="Name" required>
-                <input type="text" id="login-email" placeholder="Email or phone" required>
-                <input type="password" id="login-password" placeholder="Password" required>
+                <input type="text" id="login-username" name="username" placeholder="Name" required>
+                <input type="email" id="login-email" name="email" placeholder="Email" required>
+                <input type="password" id="login-password" name="password" placeholder="Password" required>
+                <!-- Added phone input and recaptcha container used by script.js -->
+                <input type="tel" id="login-phone" name="phone" placeholder="Phone Number (+CountryCode)" style="display: none; margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 <div id="login-city-container" style="display: none; margin-bottom: 15px;">
-                    <select id="login-city" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" required>
+                    <select id="login-city" name="city" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         <option value="">Select your city *</option>
                         <option value="Delhi">Delhi</option>
                         <option value="Mumbai">Mumbai</option>
@@ -679,6 +681,7 @@
                         <option value="Meerut">Meerut</option>
                     </select>
                 </div>
+                <div id="firebase-recaptcha-container" style="margin-bottom: 15px;"></div>
                 <button type="submit" id="auth-submit-button">Login</button>
             </form>
             <p id="login-status"></p>

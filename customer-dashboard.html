@@ -1,221 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Dashboard - City Mart</title>
-<link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=3">
     <script src="script.js" defer></script>
 </head>
+
 <body class="customer-dashboard-page">
-<header>
-    <div class="container">
-        <div class="navbar-left">
-            <a href="index.html" class="navbar-logo-link">
-<img src="./images/logo.svg" onerror="this.onerror=null;this.src='./images/logo.png';" alt="CityMart" class="navbar-logo">
-            </a>
-        </div>
-        <div class="global-search-wrapper">
-            <form class="global-search-form" onsubmit="return handleGlobalSearchSubmit(event)">
-                <input type="text" id="global-search-input" class="global-search-input" placeholder="Search products (name, brand, category...)" />
-                <button type="submit" class="global-search-button">Search</button>
-            </form>
-        </div>
-        <div class="navbar-right">
-            <nav>
-                <ul>
-                    <li><a href="index.html#home" onclick="closeAllOverlays()">Home</a></li>
-                    <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
-                    <li><a href="profile.html" onclick="closeAllOverlays()">Profile</a></li>
-                    <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
-                    <li><a href="#" onclick="closeAllOverlays(); showOrdersModal(); return false;">My Orders</a></li>
-                    <li class="user-menu">
-                        <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
-                        <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
-                    </li>
-                </ul>
-            </nav>
-            <div class="cart-icon" onclick="showCartModal()">
-                🛒
-                <span id="cart-count">0</span>
+    <header>
+        <div class="container">
+            <div class="navbar-left">
+                <a href="index.html" class="navbar-logo-link">
+                    <img src="./images/logo.svg" onerror="this.onerror=null;this.src='./images/logo.png';"
+                        alt="CityMart" class="navbar-logo">
+                </a>
             </div>
-        </div>
-    </div>
-</header>
-
-<main class="customer-dashboard-layout">
-    <aside class="customer-dashboard-sidebar">
-        <div class="customer-sidebar-header">
-            <div class="customer-avatar-large">
-                <img id="cd-avatar" src="./images/placeholder.jpg" alt="Customer avatar">
+            <div class="global-search-wrapper">
+                <form class="global-search-form" onsubmit="return handleGlobalSearchSubmit(event)">
+                    <input type="text" id="global-search-input" class="global-search-input"
+                        placeholder="Search products (name, brand, category...)" />
+                    <button type="submit" class="global-search-button">Search</button>
+                </form>
             </div>
-            <div>
-                <h2 id="cd-name">Brooklyn Simmons</h2>
-                <p id="cd-status" class="cd-status-pill cd-status-active">Active</p>
-            </div>
-        </div>
-
-        <nav class="customer-sidebar-nav">
-            <p class="customer-sidebar-section">Account</p>
-            <button class="customer-sidebar-link" onclick="window.location.href='index.html'">Home</button>
-            <button class="customer-sidebar-link customer-sidebar-link-active">Overview</button>
-            <button class="customer-sidebar-link">Addresses</button>
-            <button class="customer-sidebar-link">Payment methods</button>
-            <button class="customer-sidebar-link">Security</button>
-
-            <p class="customer-sidebar-section">Support</p>
-            <button class="customer-sidebar-link">Help & support</button>
-            <button class="customer-sidebar-link">Report an issue</button>
-        </nav>
-    </aside>
-
-    <section class="customer-dashboard-main">
-        <div class="customer-dashboard-header-row">
-            <div>
-                <h1>Customer Details</h1>
-                <p class="customer-dashboard-subtitle">Overview of this customer's purchases and activity.</p>
-            </div>
-            <div class="customer-dashboard-meta">
-                <div>
-                    <span class="meta-label">Customer ID</span>
-                    <span id="cd-id" class="meta-value">CUST-1024</span>
-                </div>
-                <div>
-                    <span class="meta-label">Member since</span>
-                    <span id="cd-since" class="meta-value">Sep 06, 2022</span>
-                </div>
-            </div>
-        </div>
-
-        <section class="customer-dashboard-top">
-            <div class="customer-profile-card">
-                <div class="customer-profile-main">
-                    <div>
-                        <h2 id="cd-name-main">Brooklyn Simmons</h2>
-                        <p class="cd-status-pill cd-status-active">Active</p>
-                    </div>
-                    <div class="customer-profile-quick-actions">
-                        <button class="btn-secondary-sm">Call</button>
-                        <button class="btn-secondary-sm">Message</button>
-                        <button class="btn-secondary-sm">Email</button>
-                    </div>
-                </div>
-
-                <div class="customer-profile-details-grid">
-                    <div>
-                        <p class="label">Email address</p>
-                        <p id="cd-email">brooklynsim2@gmail.com</p>
-                    </div>
-                    <div>
-                        <p class="label">Phone number</p>
-                        <p id="cd-phone">+91-98765 12345</p>
-                    </div>
-                    <div>
-                        <p class="label">Default address</p>
-                        <p id="cd-address">4140 Parker Rd. Allentown, New Mexico 31134</p>
-                    </div>
-                    <div>
-                        <p class="label">Last transaction</p>
-                        <p id="cd-last-transaction">12 December, 2023</p>
-                    </div>
-                </div>
-
-                <div class="customer-recent-activity">
-                    <p class="label">Recent activity</p>
+            <div class="navbar-right">
+                <nav>
                     <ul>
-                        <li>Support chat - 2 days ago</li>
-                        <li>Order delivered - 5 days ago</li>
+                        <li><a href="index.html#home" onclick="closeAllOverlays()">Home</a></li>
+                        <li><a href="#" onclick="closeAllOverlays(); showVendorsModal(); return false;">Product</a></li>
+                        <li><a href="profile.html" onclick="closeAllOverlays()">Profile</a></li>
+                        <li><a href="index.html#contact" onclick="closeAllOverlays()">Contact</a></li>
+                        <li><a href="#" onclick="closeAllOverlays(); showOrdersModal(); return false;">My Orders</a>
+                        </li>
+                        <li class="user-menu">
+                            <a href="#" class="login-btn" onclick="showLoginOptions()" id="user-menu-toggle">Login</a>
+                            <div class="user-menu-dropdown" id="user-menu-dropdown"></div>
+                        </li>
                     </ul>
+                </nav>
+                <div class="cart-icon" onclick="showCartModal()">
+                    🛒
+                    <span id="cart-count">0</span>
                 </div>
             </div>
+        </div>
+    </header>
 
-            <div class="customer-kpi-card">
-                <h3>Spending overview</h3>
-                <div class="customer-kpi-grid">
-                    <div class="customer-kpi-item">
-                        <span class="kpi-label">Total spent</span>
-                        <span id="cd-total-spent" class="kpi-value">₹42,400</span>
-                    </div>
-                    <div class="customer-kpi-item">
-                        <span class="kpi-label">Total orders</span>
-                        <span id="cd-total-orders" class="kpi-value">24</span>
-                    </div>
-                    <div class="customer-kpi-item">
-                        <span class="kpi-label">Completed</span>
-                        <span id="cd-complete-orders" class="kpi-value">20</span>
-                    </div>
-                    <div class="customer-kpi-item">
-                        <span class="kpi-label">Pending</span>
-                        <span id="cd-pending-orders" class="kpi-value">4</span>
-                    </div>
+    <main class="customer-dashboard-layout">
+        <aside class="customer-dashboard-sidebar">
+            <div class="customer-sidebar-header">
+                <div class="customer-avatar-large">
+                    <img id="cd-avatar" src="./images/placeholder.jpg" alt="Customer avatar">
                 </div>
-                <div class="customer-mini-chart-placeholder">
-                    <span>Spending trend (placeholder)</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="customer-orders-section">
-            <div class="customer-orders-header">
                 <div>
-                    <h2>All Orders</h2>
-                    <p class="customer-orders-subtitle">Recent purchases for this customer.</p>
-                </div>
-                <div class="customer-orders-filters">
-                    <select id="cd-order-filter-status">
-                        <option value="all">All status</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <input type="text" id="cd-order-search" placeholder="Search by product or order id">
+                    <h2 id="cd-name">Brooklyn Simmons</h2>
+                    <p id="cd-status" class="cd-status-pill cd-status-active">Active</p>
                 </div>
             </div>
 
-            <table class="customer-orders-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Order ID</th>
-                        <th>Product</th>
-                        <th>Price</th>
-                        <th>Payment</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="cd-orders-tbody">
-                    <!-- Will be populated by script below -->
-                </tbody>
-            </table>
+            <nav class="customer-sidebar-nav">
+                <p class="customer-sidebar-section">Account</p>
+                <button class="customer-sidebar-link" onclick="window.location.href='index.html'">Home</button>
+                <button class="customer-sidebar-link customer-sidebar-link-active">Overview</button>
+                <button class="customer-sidebar-link">Addresses</button>
+                <button class="customer-sidebar-link">Payment methods</button>
+                <button class="customer-sidebar-link">Security</button>
+
+                <p class="customer-sidebar-section">Support</p>
+                <button class="customer-sidebar-link">Help & support</button>
+                <button class="customer-sidebar-link">Report an issue</button>
+            </nav>
+        </aside>
+
+        <section class="customer-dashboard-main">
+            <div class="customer-dashboard-header-row">
+                <div>
+                    <h1>Customer Details</h1>
+                    <p class="customer-dashboard-subtitle">Overview of this customer's purchases and activity.</p>
+                </div>
+                <div class="customer-dashboard-meta">
+                    <div>
+                        <span class="meta-label">Customer ID</span>
+                        <span id="cd-id" class="meta-value">CUST-1024</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Member since</span>
+                        <span id="cd-since" class="meta-value">Sep 06, 2022</span>
+                    </div>
+                </div>
+            </div>
+
+            <section class="customer-dashboard-top">
+                <div class="customer-profile-card">
+                    <div class="customer-profile-main">
+                        <div>
+                            <h2 id="cd-name-main">Brooklyn Simmons</h2>
+                            <p class="cd-status-pill cd-status-active">Active</p>
+                        </div>
+                        <div class="customer-profile-quick-actions">
+                            <button class="btn-secondary-sm">Call</button>
+                            <button class="btn-secondary-sm">Message</button>
+                            <button class="btn-secondary-sm">Email</button>
+                        </div>
+                    </div>
+
+                    <div class="customer-profile-details-grid">
+                        <div>
+                            <p class="label">Email address</p>
+                            <p id="cd-email">brooklynsim2@gmail.com</p>
+                        </div>
+                        <div>
+                            <p class="label">Phone number</p>
+                            <p id="cd-phone">+91-98765 12345</p>
+                        </div>
+                        <div>
+                            <p class="label">Default address</p>
+                            <p id="cd-address">4140 Parker Rd. Allentown, New Mexico 31134</p>
+                        </div>
+                        <div>
+                            <p class="label">Last transaction</p>
+                            <p id="cd-last-transaction">12 December, 2023</p>
+                        </div>
+                    </div>
+
+                    <div class="customer-recent-activity">
+                        <p class="label">Recent activity</p>
+                        <ul>
+                            <li>Support chat - 2 days ago</li>
+                            <li>Order delivered - 5 days ago</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="customer-kpi-card">
+                    <h3>Spending overview</h3>
+                    <div class="customer-kpi-grid">
+                        <div class="customer-kpi-item">
+                            <span class="kpi-label">Total spent</span>
+                            <span id="cd-total-spent" class="kpi-value">₹42,400</span>
+                        </div>
+                        <div class="customer-kpi-item">
+                            <span class="kpi-label">Total orders</span>
+                            <span id="cd-total-orders" class="kpi-value">24</span>
+                        </div>
+                        <div class="customer-kpi-item">
+                            <span class="kpi-label">Completed</span>
+                            <span id="cd-complete-orders" class="kpi-value">20</span>
+                        </div>
+                        <div class="customer-kpi-item">
+                            <span class="kpi-label">Pending</span>
+                            <span id="cd-pending-orders" class="kpi-value">4</span>
+                        </div>
+                    </div>
+                    <div class="customer-mini-chart-placeholder">
+                        <span>Spending trend (placeholder)</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="customer-orders-section">
+                <div class="customer-orders-header">
+                    <div>
+                        <h2>All Orders</h2>
+                        <p class="customer-orders-subtitle">Recent purchases for this customer.</p>
+                    </div>
+                    <div class="customer-orders-filters">
+                        <select id="cd-order-filter-status">
+                            <option value="all">All status</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <input type="text" id="cd-order-search" placeholder="Search by product or order id">
+                    </div>
+                </div>
+
+                <table class="customer-orders-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cd-orders-tbody">
+                        <!-- Will be populated by script below -->
+                    </tbody>
+                </table>
+            </section>
         </section>
-    </section>
-</main>
+    </main>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const demoOrders = [
-            { date: '26 Jan, 2023', id: '246522114', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Pending' },
-            { date: '20 Jan, 2023', id: '246522089', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Completed' },
-            { date: '14 Jan, 2023', id: '246521900', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'UPI', status: 'Completed' }
-        ];
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const demoOrders = [
+                { date: '26 Jan, 2023', id: '246522114', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Pending' },
+                { date: '20 Jan, 2023', id: '246522089', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'Credit card', status: 'Completed' },
+                { date: '14 Jan, 2023', id: '246521900', product: 'Nike Air Jordan Reflex', price: '₹2,635', payment: 'UPI', status: 'Completed' }
+            ];
 
-        const tbody = document.getElementById('cd-orders-tbody');
-        const statusFilter = document.getElementById('cd-order-filter-status');
-        const searchInput = document.getElementById('cd-order-search');
+            const tbody = document.getElementById('cd-orders-tbody');
+            const statusFilter = document.getElementById('cd-order-filter-status');
+            const searchInput = document.getElementById('cd-order-search');
 
-        function renderOrders() {
-            if (!tbody) return;
-            const statusVal = statusFilter.value;
-            const query = searchInput.value.trim().toLowerCase();
-            tbody.innerHTML = '';
+            function renderOrders() {
+                if (!tbody) return;
+                const statusVal = statusFilter.value;
+                const query = searchInput.value.trim().toLowerCase();
+                tbody.innerHTML = '';
 
-            demoOrders
-                .filter(o => statusVal === 'all' || o.status.toLowerCase() === statusVal.toLowerCase())
-                .filter(o => !query || o.product.toLowerCase().includes(query) || o.id.toLowerCase().includes(query))
-                .forEach(o => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+                demoOrders
+                    .filter(o => statusVal === 'all' || o.status.toLowerCase() === statusVal.toLowerCase())
+                    .filter(o => !query || o.product.toLowerCase().includes(query) || o.id.toLowerCase().includes(query))
+                    .forEach(o => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
                         <td>${o.date}</td>
                         <td>${o.id}</td>
                         <td>${o.product}</td>
@@ -223,45 +228,68 @@
                         <td>${o.payment}</td>
                         <td><span class="status-pill ${o.status === 'Completed' ? 'status-active' : 'status-muted'}">${o.status}</span></td>
                     `;
-                    tbody.appendChild(tr);
-                });
-        }
+                        tbody.appendChild(tr);
+                    });
+            }
 
-        statusFilter.addEventListener('change', renderOrders);
-        searchInput.addEventListener('input', renderOrders);
-        renderOrders();
-    });
-</script>
+            statusFilter.addEventListener('change', renderOrders);
+            searchInput.addEventListener('input', renderOrders);
+            renderOrders();
+        });
+    </script>
 
-<!-- Login Options Modal -->
-<div id="login-options-modal" class="login-options-modal">
-    <div class="login-options-content">
-        <span class="close" onclick="closeLoginOptionsModal()">&times;</span>
-        <h2>Select Login Type</h2>
-        <div class="login-options">
-            <button type="button" onclick="startLoginAs('customer')">Customer Login</button>
-            <button type="button" onclick="startLoginAs('vendor')">Vendor Login</button>
+    <!-- Login Options Modal -->
+    <div id="login-options-modal" class="login-options-modal">
+        <div class="login-options-content">
+            <span class="close" onclick="closeLoginOptionsModal()">&times;</span>
+            <h2>Select Login Type</h2>
+            <div class="login-options">
+                <button type="button" onclick="startLoginAs('customer')">Customer Login</button>
+                <button type="button" onclick="startLoginAs('vendor')">Vendor Login</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Auth Modal -->
-<div id="auth-modal" class="auth-modal">
-    <div class="auth-content">
-        <span class="close" onclick="closeAuthModal()">&times;</span>
-        <h2 id="auth-modal-title">Login</h2>
-        <form id="login-form">
-            <input type="text" id="login-username" placeholder="Name" required>
-            <input type="text" id="login-email" placeholder="Email or phone" required>
-            <input type="password" id="login-password" placeholder="Password" required>
-            <button type="submit" id="auth-submit-button">Login</button>
-        </form>
-        <p id="login-status"></p>
-        <p class="auth-switch">
-            <a href="#" onclick="switchAuthMode(event)">New user? Sign up</a>
-        </p>
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-content">
+            <span class="close" onclick="closeAuthModal()">&times;</span>
+            <h2 id="auth-modal-title">Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" name="username" placeholder="Name" required>
+                <input type="email" id="login-email" name="email" placeholder="Email" required>
+                <input type="password" id="login-password" name="password" placeholder="Password" required>
+                <!-- Added phone input and recaptcha container used by script.js -->
+                <input type="tel" id="login-phone" name="phone" placeholder="Phone Number (+CountryCode)"
+                    style="display: none; margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <div id="login-city-container" style="display: none; margin-bottom: 15px;">
+                    <select id="login-city" name="city"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">Select your city *</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Ahmedabad">Ahmedabad</option>
+                        <option value="Surat">Surat</option>
+                        <option value="Jaipur">Jaipur</option>
+                        <option value="Aligarh">Aligarh</option>
+                        <option value="Meerut">Meerut</option>
+                    </select>
+                </div>
+                <div id="firebase-recaptcha-container" style="margin-bottom: 15px;"></div>
+                <button type="submit" id="auth-submit-button">Login</button>
+            </form>
+            <p id="login-status"></p>
+            <p class="auth-switch">
+                <a href="#" onclick="switchAuthMode(event)">New user? Sign up</a>
+            </p>
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>

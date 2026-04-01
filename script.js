@@ -1247,16 +1247,28 @@ function updateAuthUI() {
         }
     }
 
-    // Show/hide phone input and reCAPTCHA container based on authMode
+    // Show/hide components based on authMode (Signup vs Login)
+    const usernameInput = document.getElementById('login-username');
     const phoneInput = document.getElementById('login-phone');
+    const cityContainer = document.getElementById('login-city-container');
+    const citySelect = document.getElementById('login-city');
     const recaptchaContainer = document.getElementById('firebase-recaptcha-container');
+
+    if (usernameInput) {
+        usernameInput.style.display = authMode === 'signup' ? 'block' : 'none';
+        usernameInput.required = (authMode === 'signup');
+    }
     if (phoneInput) {
         phoneInput.style.display = authMode === 'signup' ? 'block' : 'none';
-        if (authMode === 'signup') {
-            phoneInput.required = false;
-        } else {
-            phoneInput.required = false;
-        }
+        // Only require phone for signup if provided
+        phoneInput.required = (authMode === 'signup'); 
+    }
+    if (cityContainer) {
+        cityContainer.style.display = authMode === 'signup' ? 'block' : 'none';
+    }
+    if (citySelect) {
+        // Essential: remove required if hidden to avoid "Form control not focusable" error
+        citySelect.required = (authMode === 'signup');
     }
     if (recaptchaContainer) {
         recaptchaContainer.style.display = authMode === 'signup' ? 'block' : 'none';
@@ -2807,30 +2819,32 @@ function askForOtpCode(email, statusEl) {
 
 // Signup flow with verification code
 async function handleSignupFlow(email, password, statusEl) {
-    const usernameInput = document.getElementById('login-username');
-    const username = usernameInput ? usernameInput.value.trim() : '';
+    // [MODIFIED] Collect signup data professionally
+    const role = loginContext === 'vendor' ? 'vendor' : 'customer';
+    
+    // Select elements
+    const usernameEl = document.getElementById('login-username');
+    const phoneEl = document.getElementById('login-phone');
+    const cityEl = document.getElementById('login-city');
 
-    if (!username) {
+    // Extract values
+    const username = usernameEl ? usernameEl.value.trim() : '';
+    const phoneNumber = phoneEl ? phoneEl.value.trim() : '';
+    const city = (cityEl && cityEl.style.display !== 'none') ? cityEl.value : '';
+
+    // Validation
+    if (authMode === 'signup' && !username) {
         showToast('Please enter a username.', 'error');
         return;
     }
-
-    // Get phone number for Firebase Phone OTP verification
-    const phoneInput = document.getElementById('login-phone');
-    const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
-
-    if (!phoneNumber) {
+    if (authMode === 'signup' && !phoneNumber) {
         showToast('Please enter a phone number.', 'error');
         return;
     }
-
-    // Validate phone number format (must start with +)
-    if (!phoneNumber.startsWith('+')) {
-        showToast('Phone number must include country code (e.g., +919876543210).', 'error');
+    if (authMode === 'signup' && !phoneNumber.startsWith('+')) {
+        showToast('Phone number must include country code (e.g., +91).', 'error');
         return;
     }
-
-    const role = loginContext === 'vendor' ? 'vendor' : 'customer';
 
     // ============================================================================
     // STEP 1: Firebase Phone OTP Verification (NEW - runs before email OTP)
