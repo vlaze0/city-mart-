@@ -4933,37 +4933,43 @@ function appendChatBubble(text, sender) {
     const container = document.getElementById('chatbot-messages');
     if (!container) return;
 
-    // Convert bold, markdown bullets and newlines to HTML equivalents
-    let formattedText = text.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
-    formattedText = formattedText.replace(/^\\* /gm, '&bull; ').replace(/(<br>)\\* /g, '$1&bull; ');
-
-    // Scan for [[PRODUCT_CARD:id|name|price|image|benefit]]
-    const cardRegex = /\[\[PRODUCT_CARD:(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*?)\]\]/g;
-    formattedText = formattedText.replace(cardRegex, (match, id, name, price, img, benefit) => {
-        const imageUrl = img && img !== 'undefined' ? img : './images/placeholder.jpg';
-        return `
-            <div class="chat-product-card">
-                <img src="${imageUrl}" alt="${name}" onerror="this.src='./images/placeholder.jpg'">
-                <div class="chat-product-info">
-                    <h4>${name}</h4>
-                    <p class="chat-product-price">₹${price}</p>
-                    <p class="chat-product-benefit">${benefit}</p>
-                    <div class="chat-card-actions">
-                        <button class="chat-buy-btn" onclick="viewProductFromChat('${id}')">Details</button>
-                        <button class="chat-buy-btn primary" onclick="addToCartFromChat('${id}', '${name}', ${price}, '${imageUrl}')">Add to Cart</button>
-                    </div>
-                </div>
-            </div>
-        `;
+    // Step 1: Collapse newlines inside [[ ]] tags so PRODUCT_CARD regex can match
+    let cleanText = text.replace(/\[\[PRODUCT_CARD:([\s\S]*?)\]\]/g, function(m) {
+        return m.replace(/[\r\n]+/g, '');
     });
 
-    container.innerHTML += `
-        <div class="chat-message ${sender}">
-            <div class="chat-bubble">${formattedText}</div>
-        </div>
-    `;
+    // Step 2: Parse PRODUCT_CARD tags (now single-line)
+    // Benefit field is optional — AI may send 4 or 5 pipe-separated values
+    var cardRegex = /\[\[PRODUCT_CARD:(.*?)\|(.*?)\|(.*?)\|(.*?)(?:\|(.*?))?\]\]/g;
+    cleanText = cleanText.replace(cardRegex, function(match, id, name, price, img, benefit) {
+        var imageUrl = (img && img.trim() && img.trim() !== 'undefined') ? img.trim() : './images/placeholder.jpg';
+        var cleanPrice = String(price).replace(/[₹,\s]/g, '').trim() || '0';
+        var cleanName = name.trim();
+        var cleanBenefit = (benefit || '').trim();
+        var benefitHtml = cleanBenefit ? '<p class="chat-product-benefit">' + cleanBenefit + '</p>' : '';
+        var safeName = cleanName.replace(/'/g, "\\'");
+        return '<div class="chat-product-card">' +
+            '<img src="' + imageUrl + '" alt="' + cleanName + '" onerror="this.src=\'./images/placeholder.jpg\'">' +
+            '<div class="chat-product-info">' +
+            '<h4>' + cleanName + '</h4>' +
+            '<p class="chat-product-price">₹' + cleanPrice + '</p>' +
+            benefitHtml +
+            '<div class="chat-card-actions">' +
+            '<button class="chat-buy-btn" onclick="viewProductFromChat(\'' + id.trim() + '\')">Details</button>' +
+            '<button class="chat-buy-btn primary" onclick="addToCartFromChat(\'' + id.trim() + '\', \'' + safeName + '\', ' + cleanPrice + ', \'' + imageUrl + '\')">Add to Cart</button>' +
+            '</div></div></div>';
+    });
+
+    // Step 3: Markdown formatting
+    var formattedText = cleanText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>')
+        .replace(/(^|\<br\>)\* /g, '$1&bull; ');
+
+    container.innerHTML += '<div class="chat-message ' + sender + '"><div class="chat-bubble">' + formattedText + '</div></div>';
     scrollToChatBottom();
 }
+
 
 // Helper functions for chat interactions
 window.addToCartFromChat = function(id, name, price, image) {
